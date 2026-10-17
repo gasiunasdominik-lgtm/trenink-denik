@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>B2 · Celý tartan</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="b-base.css">
+<style>
+.phone{background:var(--tartan)}
+.top{position:relative;padding:54px 20px 0;display:flex;justify-content:space-between;font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;z-index:2}
+/* readiness = „dráha 0“, číslo namalované na startu */
+.hero{position:relative;margin-top:14px;height:214px;border-top:3px solid var(--line);border-bottom:3px solid var(--line);display:grid;grid-template-columns:auto 1fr;align-items:center;z-index:2}
+.hero .num{font-weight:900;font-size:210px;line-height:.72;letter-spacing:-.03em;padding:0 8px 0 10px;color:var(--line)}
+.hero .r{align-self:stretch;border-left:3px solid var(--line);display:flex;flex-direction:column;justify-content:space-between;padding:16px 16px 14px}
+.hero .r b{font-weight:900;font-size:32px;line-height:.88;text-transform:uppercase}
+.hero .r .k{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.hero .r .k div{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;opacity:.85}
+.hero .r .k div strong{display:block;font-size:22px;letter-spacing:0;opacity:1;font-weight:800;font-variation-settings:"wdth" 62}
+.lbl{position:relative;z-index:2;font-size:11px;font-weight:700;letter-spacing:.22em;padding:8px 20px 0;opacity:.8}
+
+.list{position:relative;z-index:2;margin-top:14px}
+.lane{position:relative;display:grid;grid-template-columns:52px 1fr auto;align-items:center;min-height:68px;padding-right:18px;border-bottom:3px solid var(--line)}
+.lane:first-child{border-top:3px solid var(--line)}
+.lane .n{font-weight:900;font-size:40px;text-align:center;line-height:1}
+.lane .t{font-weight:800;font-size:22px;text-transform:uppercase;line-height:1}
+.lane .t small{display:block;font-weight:500;font-size:13px;text-transform:none;font-variation-settings:"wdth" 90;margin-top:4px;opacity:.85}
+.lane .v{font-weight:800;font-size:30px}
+.lane .v i{font-style:normal;font-size:14px;opacity:.7}
+.lane.done>:not(.stamp){opacity:.4}
+.lane .stamp{--sc:var(--line);right:74px;top:16px;font-size:20px}
+.bar{position:relative;z-index:2;display:flex;justify-content:space-between;padding:12px 18px 0 52px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+.bar span{opacity:.85}.bar b{font-size:16px;letter-spacing:.02em}
+.finish{position:absolute;z-index:3;left:16px;right:16px;bottom:98px;height:66px;background:var(--bg);color:var(--ink);border:0;font-family:inherit;font-weight:900;font-size:24px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="phone">
+  <svg class="grain" viewBox="0 0 390 844" preserveAspectRatio="none"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .35  0 0 0 0 .1  0 0 0 0 .05  0 0 0 1.1 -.2"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>
+  <div class="tag">B2 · CELÝ TARTAN</div>
+  <div class="top c70"><span>So 17.10. · T42</span><span>Den 290</span></div>
+
+  <div class="hero">
+    <div class="num c62 tab">78</div>
+    <div class="r">
+      <b class="c62">Plný<br>trénink</b>
+      <div class="k c70">
+        <div><strong>71</strong>HRV −4 %</div>
+        <div><strong>48</strong>Tep</div>
+        <div><strong>7:40</strong>Spánek</div>
+        <div><strong>3·4·4</strong>Ún·Sv·Ná</div>
+      </div>
+    </div>
+  </div>
+  <div class="lbl">READINESS</div>
+
+  <div class="list">
+    <div class="lane done"><span class="n c62">1</span><div class="t c70">Mobilita / rehab<small>kotník L · loket P</small></div><div class="v c62 tab">30<i>′</i></div><span class="stamp" style="--r:-9deg">Hotovo</span></div>
+    <div class="lane"><span class="n c62">2</span><div class="t c70">Multi-event blok<small>dálka technika · koule · 3×150 m</small></div><div class="v c62 tab">120<i>′</i></div></div>
+    <div class="lane"><span class="n c62">3</span><div class="t c70">Sauna + masáž<small>regenerace</small></div><div class="v c62 tab">45<i>′</i></div></div>
+  </div>
+  <div class="bar"><span>ACWR <b class="c62">1.12</b></span><span>sRPE 7d <b class="c62">2 840</b></span><span>Mono <b class="c62">1.4</b></span></div>
+
+  <button class="finish c70" id="go">Hotovo</button>
+  <nav class="tabs"><a class="on">DNES</a><a>TÝDEN</a><a>VÝKON</a><a>GRAFY</a><i class="g"></i></nav>
+</div>
+<script type="module">
+import { wireStamp, el } from './b-stamp.js';
+wireStamp({ button: document.getElementById('go'), rows: '.lane', make: () => el('<span class="stamp">Hotovo</span>') });
+</script>
+</body>
+</html>

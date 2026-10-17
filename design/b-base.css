@@ -1,0 +1,32 @@
+/* Společný základ variant směru B (Dráha) */
+:root{
+  --bg:#0d0d0c; --ink:#f5f2ea; --dim:#8c877d; --rule:#262523;
+  --tartan:#b8402a; --tartan-l:#d0563a; --tartan-d:#8a2e1d; --line:#f5f2ea;
+  --go:#49d17d; --warn:#f2b632; --stop:#ff4b3a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#1b1b1b;color:var(--ink);font-family:"Archivo",sans-serif;font-variation-settings:"wdth" 88;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:grid;place-items:center}
+.phone{width:390px;height:844px;background:var(--bg);position:relative;overflow:hidden;border-radius:44px;box-shadow:0 0 0 10px #000,0 0 0 11px #333}
+@media (max-width:430px){body{display:block}.phone{width:100%;height:100vh;border-radius:0;box-shadow:none}}
+.c62{font-variation-settings:"wdth" 62}
+.c70{font-variation-settings:"wdth" 70}
+.tab{font-variant-numeric:tabular-nums}
+.tag{position:absolute;top:12px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:600;letter-spacing:.2em;color:rgba(255,255,255,.55);z-index:5}
+.grain{position:absolute;inset:0;width:100%;height:100%;mix-blend-mode:multiply;opacity:.55;pointer-events:none}
+
+/* razítko */
+.stamp{position:absolute;pointer-events:none;font-weight:900;font-variation-settings:"wdth" 70;letter-spacing:.14em;text-transform:uppercase;line-height:1;
+  color:var(--sc,var(--tartan-l));border:2.5px solid currentColor;padding:4px 8px 3px;transform:rotate(var(--r,-8deg));opacity:.92;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cfilter id='f'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cfilter id='f'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E")}
+.stamp small{display:block;font-size:.55em;letter-spacing:.1em;margin-top:2px;font-weight:700}
+.stamp.new{animation:stamp .3s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes stamp{from{transform:rotate(var(--r,-8deg)) scale(2.4);opacity:0}to{transform:rotate(var(--r,-8deg)) scale(1);opacity:.92}}
+.stamp.round{border-radius:50%;width:84px;height:84px;display:grid;place-content:center;text-align:center;padding:0;border-width:3px;box-shadow:inset 0 0 0 3px var(--bg),inset 0 0 0 5px currentColor;font-size:15px}
+
+/* spodní lišta */
+.tabs{position:absolute;left:0;right:0;bottom:0;height:84px;display:grid;grid-template-columns:repeat(4,1fr) 52px;border-top:1px solid var(--rule);background:var(--bg);z-index:4}
+.tabs a{font-weight:800;font-size:15px;letter-spacing:.1em;color:#5a5650;display:flex;justify-content:center;align-items:flex-start;padding-top:15px;font-variation-settings:"wdth" 70}
+.tabs a.on{color:var(--ink)}
+.tabs .g{justify-self:center;margin-top:14px;width:20px;height:20px;border-radius:50%;border:5px solid #5a5650}
