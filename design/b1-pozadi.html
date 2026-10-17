@@ -24,6 +24,11 @@
 .v1 .paint{left:auto;right:16px;bottom:auto;top:84px;font-size:170px}
 .v1 .paint-l{left:auto;right:20px;bottom:auto;top:222px}
 .v1 .state{top:auto;bottom:18px}
+/* V6 sektor vrhu: 78 stojí uvnitř výseče vpravo dole */
+.v6 .paint{left:auto;right:16px}
+.v6 .paint-l{left:auto;right:20px}
+.v6 .state{right:auto;left:20px;text-align:left;top:92px}
+.v6 .dots{justify-content:flex-start}
 /* V4 cílová rovinka zhora: čísla drah nahoře, stav dole */
 .v4 .state{top:auto;bottom:18px}
 .v4 .paint{bottom:40px}
@@ -40,7 +45,7 @@
 .list{margin-top:16px}
 .bar{display:flex;justify-content:space-between;padding:12px 18px 0 44px;font-size:12px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;font-weight:600}
 .bar b{color:var(--ink);font-size:16px;letter-spacing:.02em}
-.finish{position:absolute;left:16px;right:16px;bottom:98px;height:66px;background:var(--ink);color:var(--bg);border:0;font-family:inherit;font-weight:900;font-size:24px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+.finish{position:absolute;left:16px;right:16px;bottom:98px;height:66px;background:var(--tartan);color:var(--ink);border:0;font-family:inherit;font-weight:900;font-size:24px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
 .pick{position:absolute;z-index:6;top:30px;left:50%;transform:translateX(-50%);display:flex;gap:4px}
 .pick a{font:700 11px "Archivo";color:rgba(255,255,255,.6);padding:2px 6px;border:1px solid rgba(255,255,255,.3);text-decoration:none}
 .pick a.on{background:var(--line);color:var(--bg)}
@@ -101,6 +106,41 @@ const variants = {
     [0, 65, 130, 195, 260, 325, 390].map(x => line(`M${x} 0 V372`)).join('') +
     line('M0 152 H390', 9) +
     [1, 2, 3, 4, 5, 6].map((n, k) => `<text x="${32 + k * 65}" y="140" fill="${W}" font-family="Archivo" font-weight="900" font-size="34" style="font-variation-settings:'wdth' 62" text-anchor="middle">${n}</text>`).join('') },
+
+  5: { name: 'PŘEKÁŽKY', svg:
+    [168, 209, 250, 291, 332, 373].map(y => line(`M0 ${y} H390`)).join('') +
+    // překážky zhora: pruhovaná příčka + nohy dozadu
+    [0, 1, 2, 3, 4].flatMap(k => [258, 344].map(x => {
+      const y = 168 + k * 41;
+      return line(`M${x} ${y + 5} v31`, 7) + line(`M${x} ${y + 5} v31`, 7, `stroke="${BG}" stroke-dasharray="5 5"`).replace(`stroke="${W}" `, '') +
+        line(`M${x} ${y + 6} h-18 M${x} ${y + 35} h-18`, 2);
+    })).join('') },
+
+  6: { name: 'SEKTOR VRHU', svg: (() => {
+    const cx = 34, cy = 360, a1 = -22.5 * Math.PI / 180, a2 = -57.4 * Math.PI / 180, L = 700;
+    const ray = a => line(`M${cx + Math.cos(a) * 36} ${cy + Math.sin(a) * 36} L${cx + Math.cos(a) * L} ${cy + Math.sin(a) * L}`, 3);
+    const arc = (r, m) => line(`M${cx + Math.cos(a1) * r} ${cy + Math.sin(a1) * r} A${r} ${r} 0 0 0 ${cx + Math.cos(a2) * r} ${cy + Math.sin(a2) * r}`, 1.6, 'stroke-dasharray="4 6"') +
+      `<text x="${cx + Math.cos(a1) * r + 6}" y="${cy + Math.sin(a1) * r + 14}" fill="${W}" font-family="Archivo" font-weight="800" font-size="13" style="font-variation-settings:'wdth' 62">${m} m</text>`;
+    return ray(a1) + ray(a2) + arc(150, 12) + arc(240, 14) + arc(330, 16) +
+      `<circle cx="${cx}" cy="${cy}" r="34" fill="none" stroke="${W}" stroke-width="4"/>` +
+      line(`M${cx + Math.cos(a1 - .2) * 34} ${cy + Math.sin(a1 - .2) * 34} A34 34 0 0 0 ${cx + Math.cos(a2 + .2) * 34} ${cy + Math.sin(a2 + .2) * 34}`, 10);
+  })() },
+
+  7: { name: 'ROZBĚH DÁLKY', svg:
+    `<rect x="318" y="208" width="90" height="92" fill="#2a211a"/>` +
+    line('M0 208 H390') + line('M0 300 H390') +
+    `<rect x="292" y="208" width="18" height="92" fill="${W}"/><rect x="310" y="208" width="6" height="92" fill="#e8d9a8"/>` +
+    [60, 120, 180, 240].map(x => line(`M${x} 292 v8`, 3)).join('') +
+    // uhrabaný písek
+    [222, 238, 254, 270, 286].map(y => `<path d="M322 ${y} H404" stroke="#4a3a2c" stroke-width="2"/>`).join('') +
+    `<text x="301" y="200" fill="${W}" font-family="Archivo" font-weight="800" font-size="11" letter-spacing="1.5" text-anchor="middle" style="font-variation-settings:'wdth' 70">ODRAZ</text>` },
+
+  8: { name: 'DESETIBOJ', svg:
+    ['100 m', 'DÁLKA', 'KOULE', 'VÝŠKA', '400 m', '110 m PŘ.', 'DISK', 'TYČ', 'OŠTĚP', '1500 m'].map((d, k) => {
+      const y = 190 + k * 18;
+      return line(`M0 ${y} H390`, k === 5 ? 5 : 1.6) +
+        `<text x="378" y="${y + 13}" fill="${W}" font-family="Archivo" font-weight="800" font-size="10" letter-spacing="1.5" text-anchor="end" style="font-variation-settings:'wdth' 70">${d}</text>`;
+    }).join('') + line('M0 370 H390', 1.6) },
 };
 
 const v = new URLSearchParams(location.search).get('v') || '1';
