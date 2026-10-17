@@ -14,7 +14,7 @@
 .paint-l{position:absolute;z-index:2;left:18px;bottom:14px;font-weight:800;font-size:13px;letter-spacing:.22em}
 .state{position:absolute;z-index:2;right:18px;top:96px;text-align:right}
 .state b{display:block;font-weight:900;font-size:30px;line-height:.9;text-transform:uppercase}
-.state small{display:block;font-size:13px;font-weight:600;margin-top:5px;opacity:.9}
+.state small{display:block;font-size:15px;font-weight:700;margin-top:6px;line-height:1.25;font-variation-settings:"wdth" 78}
 .dots{display:flex;gap:6px;justify-content:flex-end;margin-bottom:10px}
 .dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--line)}
 .dots i.on{background:var(--line)}
@@ -22,15 +22,15 @@
 /* V1 ovál: vnitřek oválu je tmavý, 78 stojí v trávníku, dráhy obtáčí zleva dolů */
 .v1 .track{background:var(--bg)}
 .v1 .paint{left:auto;right:16px;bottom:auto;top:84px;font-size:170px}
-.v1 .paint-l{left:auto;right:20px;bottom:auto;top:222px}
-.v1 .state{top:auto;bottom:18px}
+.v1 .paint-l{left:auto;right:22px;bottom:auto;top:222px}
+.v1 .state{top:auto;bottom:22px}
 /* V6 sektor vrhu: 78 stojí uvnitř výseče vpravo dole */
 .v6 .paint{left:auto;right:16px}
-.v6 .paint-l{left:auto;right:20px}
-.v6 .state{right:auto;left:20px;text-align:left;top:92px}
+.v6 .paint-l{left:auto;right:22px}
+.v6 .state{right:auto;left:28px;text-align:left}
 .v6 .dots{justify-content:flex-start}
 /* V4 cílová rovinka zhora: čísla drah nahoře, stav dole */
-.v4 .state{top:auto;bottom:18px}
+.v4 .state{top:auto;bottom:22px}
 .v4 .paint{bottom:40px}
 
 .lane{display:grid;grid-template-columns:44px 1fr auto;align-items:center;min-height:66px;padding-right:18px;border-bottom:2px solid var(--line);position:relative}
@@ -49,6 +49,19 @@
 .pick{position:absolute;z-index:6;top:30px;left:50%;transform:translateX(-50%);display:flex;gap:4px}
 .pick a{font:700 11px "Archivo";color:rgba(255,255,255,.6);padding:2px 6px;border:1px solid rgba(255,255,255,.3);text-decoration:none}
 .pick a.on{background:var(--line);color:var(--bg)}
+/* čitelnost: pod drobným textem je plocha v barvě podkladu */
+.phone{--patch:var(--tartan)}
+.state,.meta span,.paint-l{background:var(--patch);box-shadow:0 0 0 8px var(--patch)}
+/* stejné zrno jako dráha, aby plocha splynula; přesah 8 px řeší outline se stejnou texturou */
+.phone:not(.v1) :is(.state,.meta span,.paint-l){box-shadow:none;border:8px solid transparent;margin:-8px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .1  0 0 0 0 .05  0 0 0 1.1 -.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E") padding-box border-box,var(--patch) border-box;background-blend-mode:multiply}
+.state{right:26px;top:100px}
+.meta{top:58px;left:28px;right:28px}
+.paint-l{left:22px;bottom:16px}
+.v1{--patch:var(--bg)}
+.v10 .paint{font-size:150px;bottom:48px}
+.v12 .state{right:auto;left:28px;text-align:left;top:96px}
+.v12 .paint{font-size:168px}
+.v12 .dots{justify-content:flex-start}
 </style>
 </head>
 <body>
@@ -141,6 +154,36 @@ const variants = {
       return line(`M0 ${y} H390`, k === 5 ? 5 : 1.6) +
         `<text x="378" y="${y + 13}" fill="${W}" font-family="Archivo" font-weight="800" font-size="10" letter-spacing="1.5" text-anchor="end" style="font-variation-settings:'wdth' 70">${d}</text>`;
     }).join('') + line('M0 370 H390', 1.6) },
+
+  9: { name: 'VÝŠKA', svg:
+    `<rect x="292" y="206" width="110" height="112" fill="#232322"/>` +
+    line('M292 206 v112', 1.4) +
+    line('M284 200 V324', 3) + `<rect x="279" y="194" width="10" height="10" fill="${W}"/><rect x="279" y="320" width="10" height="10" fill="${W}"/>` +
+    // rozběh do J: přímá část + oblouk k laťce
+    line('M120 372 C 200 372, 250 330, 278 268', 2.4, 'stroke-dasharray="2 9" stroke-linecap="round"') +
+    [[150, 370], [205, 360], [245, 328]].map(([x, y]) => line(`M${x - 6} ${y - 6} l12 12 M${x + 6} ${y - 6} l-12 12`, 2.4)).join('') },
+
+  10: { name: 'JEDNA DRÁHA', svg:
+    line('M0 196 H390', 4) + line('M0 340 H390', 4) +
+    line('M318 196 V340', 7) +
+    `<path d="M352 252 l16 16 l-16 16" fill="none" stroke="${W}" stroke-width="5"/>` },
+
+  11: { name: 'ŠTAFETA', svg:
+    [196, 232, 268, 304, 340, 376].map(y => line(`M0 ${y} H390`)).join('') +
+    [0, 1, 2, 3, 4].map(k => {
+      const y = 196 + k * 36, x = 236 + k * 22;
+      return line(`M${x} ${y + 4} v28`, 3) + line(`M${x + 60} ${y + 4} v28`, 2, 'stroke-dasharray="4 4"') +
+        `<path d="M${x + 6} ${y + 2} l10 0 l-5 8 Z M${x + 6} ${y + 34} l10 0 l-5 -8 Z" fill="${W}"/>`;
+    }).join('') },
+
+  12: { name: 'OŠTĚP', svg: (() => {
+    const cx = 320, cy = 320, r = 80, a = 14.48 * Math.PI / 180, L = 400;
+    const ray = s => line(`M${cx + Math.sin(s * a) * r} ${cy - Math.cos(s * a) * r} L${cx + Math.sin(s * a) * L} ${cy - Math.cos(s * a) * L}`, 2.4);
+    return line(`M300 372 V${cy - Math.sqrt(r * r - 400)}`) + line(`M340 372 V${cy - Math.sqrt(r * r - 400)}`) +
+      line(`M${cx + Math.sin(-a) * r} ${cy - Math.cos(a) * r} A${r} ${r} 0 0 1 ${cx + Math.sin(a) * r} ${cy - Math.cos(a) * r}`, 6) +
+      ray(-1) + ray(1) +
+      [300, 330, 360].map(y => line(`M296 ${y} h-8 M344 ${y} h8`, 2)).join('');
+  })() },
 };
 
 const v = new URLSearchParams(location.search).get('v') || '1';
