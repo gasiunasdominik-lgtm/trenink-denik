@@ -1,0 +1,13 @@
+"""Lokální server pro vývoj bez cache: python tools/devserver.py [port]"""
+import http.server, sys
+from pathlib import Path
+
+class NoCache(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-store')
+        super().end_headers()
+
+port = int(sys.argv[1]) if len(sys.argv) > 1 else 5173
+root = str(Path(__file__).resolve().parent.parent)
+handler = lambda *a, **kw: NoCache(*a, directory=root, **kw)
+http.server.ThreadingHTTPServer(('0.0.0.0', port), handler).serve_forever()
