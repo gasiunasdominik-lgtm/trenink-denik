@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A · Tabule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow+Semi+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070707; --panel:#101010; --rule:#232323; --rule2:#2e2e2e;
+  --ink:#f3f1ec; --dim:#8a8781; --mute:#56544f;
+  --tartan:#d24a2a; --tartan-d:#8f2f19;
+  --go:#3ddc84; --amber:#ffb81c; --stop:#ff3b30;
+  --num:"Barlow Condensed",sans-serif; --txt:"Barlow Semi Condensed",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#1b1b1b;color:var(--ink);font-family:var(--txt);-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:grid;place-items:center}
+.phone{width:390px;height:844px;background:var(--bg);position:relative;overflow:hidden;border-radius:44px;box-shadow:0 0 0 10px #000,0 0 0 11px #333}
+@media (max-width:430px){body{display:block}.phone{width:100%;height:100vh;border-radius:0;box-shadow:none}}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.status{height:47px}
+.wrap{padding:0 16px}
+
+/* header – scoreboard strip */
+.head{display:flex;align-items:flex-end;justify-content:space-between;padding:6px 16px 12px;border-bottom:1px solid var(--rule)}
+.head .day{font-family:var(--num);font-weight:800;font-size:44px;line-height:.85;text-transform:uppercase}
+.head .day small{display:block;font-size:13px;font-weight:600;color:var(--dim);letter-spacing:.14em;margin-bottom:6px}
+.clock{text-align:right}
+.clock .t{font-family:var(--num);font-weight:600;font-size:26px;color:var(--amber);font-variant-numeric:tabular-nums;line-height:1}
+.clock .t span{color:var(--mute)}
+.clock small{display:block;font-size:11px;letter-spacing:.16em;color:var(--dim);margin-top:4px}
+
+/* start lights */
+.lights{margin:16px 16px 0;background:var(--panel);border:1px solid var(--rule);padding:14px 14px 12px}
+.lamps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.lamp{aspect-ratio:1;border-radius:50%;background:#1a1a1a;box-shadow:inset 0 2px 0 #000,inset 0 -1px 0 #2a2a2a;position:relative}
+.lamp.on{background:radial-gradient(circle at 50% 45%,#9dffc8 0,var(--go) 38%,#178a4b 100%);box-shadow:0 0 18px rgba(61,220,132,.45)}
+.lrow{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+.lrow .big{font-family:var(--num);font-weight:800;font-size:40px;line-height:.9}
+.lrow .big em{font-style:normal;font-size:16px;color:var(--dim);font-weight:600;margin-left:2px}
+.verdict{font-family:var(--num);font-weight:700;font-size:17px;letter-spacing:.06em;color:var(--go);text-transform:uppercase;text-align:right}
+.verdict small{display:block;color:var(--dim);font-weight:500;letter-spacing:.04em;font-size:13px;text-transform:none}
+.drivers{display:grid;grid-template-columns:repeat(4,1fr);margin-top:12px;border-top:1px solid var(--rule)}
+.drivers div{padding:9px 0 0;border-right:1px solid var(--rule);padding-left:8px}
+.drivers div:first-child{padding-left:0}
+.drivers div:last-child{border-right:0}
+.drivers b{display:block;font-family:var(--num);font-weight:700;font-size:21px;font-variant-numeric:tabular-nums}
+.drivers b i{font-style:normal;font-size:12px;color:var(--dim);font-weight:600}
+.drivers span{font-size:10.5px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+.down{color:var(--amber)!important}
+
+/* results-list plan */
+.sect{display:flex;justify-content:space-between;align-items:baseline;margin:20px 16px 6px;font-family:var(--num);font-weight:700;font-size:13px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase}
+.sect b{color:var(--tartan)}
+.list{margin:0 16px;border-top:2px solid var(--ink)}
+.row{display:grid;grid-template-columns:34px 1fr auto;align-items:center;min-height:56px;border-bottom:1px solid var(--rule)}
+.row .ln{font-family:var(--num);font-weight:800;font-size:22px;color:var(--bg);background:var(--ink);width:26px;height:30px;display:grid;place-items:center}
+.row.done .ln{background:var(--tartan);color:var(--ink)}
+.row .nm{font-family:var(--num);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.02em;line-height:1.05}
+.row .nm small{display:block;font-family:var(--txt);font-weight:500;font-size:13px;color:var(--dim);text-transform:none;letter-spacing:0}
+.row .mn{font-family:var(--num);font-weight:600;font-size:22px;font-variant-numeric:tabular-nums;color:var(--amber)}
+.row .mn i{font-style:normal;color:var(--dim);font-size:14px}
+
+.load{display:flex;margin:14px 16px 0;font-family:var(--num);font-size:13px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;gap:16px}
+.load b{color:var(--ink);font-size:17px;font-weight:700;letter-spacing:.02em;margin-left:4px}
+
+/* thumb zone */
+.cta{position:absolute;left:16px;right:16px;bottom:96px;display:grid;grid-template-columns:1fr 2fr;gap:8px}
+.btn{height:64px;border:0;font-family:var(--num);font-weight:800;font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);cursor:pointer}
+.btn.ghost{background:transparent;border:2px solid var(--rule2);font-size:17px}
+.btn.go{background:var(--tartan);position:relative;overflow:hidden}
+.btn.go::after{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:#fff;transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.btn.go.hit::after{transform:scaleX(1)}
+
+.tabs{position:absolute;left:0;right:0;bottom:0;height:84px;border-top:1px solid var(--rule);display:grid;grid-template-columns:repeat(4,1fr) 56px;background:var(--bg)}
+.tabs a{font-family:var(--num);font-weight:700;font-size:15px;letter-spacing:.12em;color:var(--mute);text-decoration:none;display:flex;justify-content:center;padding-top:14px;position:relative}
+.tabs a.on{color:var(--ink)}
+.tabs a.on::before{content:"";position:absolute;top:-1px;left:22%;right:22%;height:3px;background:var(--tartan)}
+.gear{width:20px;height:20px;border:2px solid var(--mute);border-radius:50%;margin-top:12px;justify-self:center;position:relative}
+.gear::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--mute)}
+.tag{position:absolute;top:12px;left:50%;transform:translateX(-50%);font:600 11px var(--txt);letter-spacing:.2em;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status"></div><div class="tag">SMĚR A · TABULE</div>
+
+  <header class="head">
+    <div class="day"><small>TÝDEN 42 · DEN 290</small>Sobota 17/10</div>
+    <div class="clock"><div class="t num">07<span>:</span>12<span>:</span>04</div><small>CHECK-IN 06:58</small></div>
+  </header>
+
+  <section class="lights">
+    <div class="lamps"><i class="lamp on"></i><i class="lamp on"></i><i class="lamp on"></i><i class="lamp on"></i><i class="lamp"></i></div>
+    <div class="lrow">
+      <div class="big num">78<em>/100</em></div>
+      <div class="verdict">Plný trénink<small>HRV mírně pod baseline</small></div>
+    </div>
+    <div class="drivers">
+      <div><b class="down">71<i> ms</i></b><span>HRV −4 %</span></div>
+      <div><b>48<i> bpm</i></b><span>Klid. tep</span></div>
+      <div><b>7:40</b><span>Spánek</span></div>
+      <div><b>3·4·4</b><span>Ún·Sv·Ná</span></div>
+    </div>
+  </section>
+
+  <div class="sect"><span>Startovní listina · dnes</span><b>3 BĚHY</b></div>
+  <div class="list">
+    <div class="row done"><span class="ln">1</span><div class="nm">Mobilita / rehab<small>kotník L, loket P · ráno</small></div><div class="mn num">30<i>′</i></div></div>
+    <div class="row"><span class="ln">2</span><div class="nm">Multi-event blok<small>dálka technika · koule · 3×150 m</small></div><div class="mn num">120<i>′</i></div></div>
+    <div class="row"><span class="ln">3</span><div class="nm">Sauna + masáž<small>regenerace</small></div><div class="mn num">45<i>′</i></div></div>
+  </div>
+
+  <div class="load"><span>ACWR<b>1.12</b></span><span>sRPE 7D<b>2 840</b></span><span>Mono<b>1.4</b></span></div>
+
+  <div class="cta">
+    <button class="btn ghost">Upravit</button>
+    <button class="btn go" onclick="this.classList.toggle('hit');navigator.vibrate&&navigator.vibrate(12)">Hotovo · 2</button>
+  </div>
+
+  <nav class="tabs"><a class="on">DNES</a><a>TÝDEN</a><a>VÝKON</a><a>GRAFY</a><i class="gear"></i></nav>
+</div>
+</body>
+</html>

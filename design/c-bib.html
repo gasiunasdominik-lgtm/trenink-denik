@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>C · Startovní číslo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#151719; --ink:#eeeae1; --dim:#7f7c75; --rule:#2a2c2f;
+  --paper:#efebe2; --paper-ink:#121212; --tartan:#c4462b;
+  --go:#3fcf7e; --off:#2a2c2f;
+  --head:"Oswald",sans-serif; --mono:"IBM Plex Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#1b1b1b;color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:grid;place-items:center}
+.phone{width:390px;height:844px;background:var(--bg);position:relative;overflow:hidden;border-radius:44px;box-shadow:0 0 0 10px #000,0 0 0 11px #333}
+@media (max-width:430px){body{display:block}.phone{width:100%;height:100vh;border-radius:0;box-shadow:none}}
+.tag{position:absolute;top:12px;left:50%;transform:translateX(-50%);white-space:nowrap;font:500 11px var(--mono);letter-spacing:.2em;color:#5d5b56}
+
+/* bib */
+.bib{margin:54px 16px 0;background:var(--paper);color:var(--paper-ink);position:relative;padding:0 0 12px}
+.bib .band{background:var(--tartan);color:var(--paper);font:600 12px var(--head);letter-spacing:.22em;text-transform:uppercase;padding:7px 14px;display:flex;justify-content:space-between}
+.bib .pin{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--bg);box-shadow:inset 0 1px 1px rgba(0,0,0,.6)}
+.bib .p1{top:38px;left:10px}.bib .p2{top:38px;right:10px}.bib .p3{bottom:10px;left:10px}.bib .p4{bottom:10px;right:10px}
+.bib .no{font:700 132px/0.86 var(--head);text-align:center;letter-spacing:-.01em;margin-top:12px;font-variant-numeric:tabular-nums}
+.bib .sub{display:flex;justify-content:center;gap:18px;font:600 15px var(--head);letter-spacing:.18em;text-transform:uppercase;margin-top:6px}
+.bib .sub span:nth-child(2){color:var(--tartan)}
+
+/* readiness lights strip */
+.ready{margin:14px 16px 0;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.lights{display:flex;gap:6px;background:#0b0c0d;padding:8px 10px;border:1px solid var(--rule)}
+.lights i{width:20px;height:20px;border-radius:50%;background:var(--off)}
+.lights i.on{background:var(--go);box-shadow:0 0 10px rgba(63,207,126,.5)}
+.ready .txt{font:600 22px/1 var(--head);text-transform:uppercase;letter-spacing:.04em}
+.ready .txt small{display:block;font:400 12px var(--mono);color:var(--dim);text-transform:none;letter-spacing:0;margin-top:4px}
+
+/* heat sheet */
+.sheet{margin:20px 16px 0}
+.sheet h3{font:600 12px var(--mono);letter-spacing:.16em;color:var(--dim);display:flex;justify-content:space-between;border-bottom:1px dashed #3b3d40;padding-bottom:6px}
+.r{display:grid;grid-template-columns:28px 1fr 52px;align-items:center;min-height:54px;border-bottom:1px dashed #3b3d40;position:relative}
+.r .i{font:500 13px var(--mono);color:var(--dim)}
+.r .d{font:600 19px/1.05 var(--head);text-transform:uppercase;letter-spacing:.02em}
+.r .d small{display:block;font:400 12px var(--mono);color:var(--dim);text-transform:none;letter-spacing:0;margin-top:2px}
+.r .m{font:500 16px var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.stamp{position:absolute;right:62px;top:50%;transform:translateY(-50%) rotate(-9deg);font:700 15px var(--head);letter-spacing:.14em;color:var(--tartan);border:2px solid var(--tartan);padding:1px 7px;opacity:.9}
+.stamp.new{animation:stamp .28s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes stamp{from{transform:translateY(-50%) rotate(-9deg) scale(2.2);opacity:0}to{transform:translateY(-50%) rotate(-9deg) scale(1);opacity:.9}}
+.load{margin:12px 16px 0;font:400 12px var(--mono);color:var(--dim);display:flex;justify-content:space-between}
+.load b{color:var(--ink);font-weight:600}
+
+.cta{position:absolute;left:16px;right:16px;bottom:98px;height:64px;background:var(--tartan);color:var(--paper);border:0;font:700 22px var(--head);letter-spacing:.16em;text-transform:uppercase;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 20px}
+.cta span:last-child{font:500 14px var(--mono);letter-spacing:0;opacity:.85}
+
+.tabs{position:absolute;left:0;right:0;bottom:0;height:84px;display:grid;grid-template-columns:repeat(4,1fr) 52px;border-top:1px solid var(--rule);background:var(--bg)}
+.tabs a{font:600 14px var(--head);letter-spacing:.14em;color:#55534f;display:flex;justify-content:center;align-items:flex-start;padding-top:15px}
+.tabs a.on{color:var(--ink)}
+.tabs a.on b{border-bottom:2px solid var(--tartan);padding-bottom:3px;font-weight:600}
+.tabs .g{justify-self:center;margin-top:14px;width:20px;height:20px;border-radius:50%;border:5px solid #55534f}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="tag">SMĚR C · STARTOVNÍ ČÍSLO</div>
+  <div class="bib">
+    <div class="band"><span>Desetiboj · trénink</span><span>2026</span></div>
+    <i class="pin p1"></i><i class="pin p2"></i><i class="pin p3"></i><i class="pin p4"></i>
+    <div class="no">290</div>
+    <div class="sub"><span>Sobota</span><span>17.10.</span><span>T42</span></div>
+  </div>
+
+  <div class="ready">
+    <div class="lights"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+    <div class="txt">Plný trénink · 78<small>HRV 71 ms (−4 %) · tep 48 · spánek 7:40</small></div>
+  </div>
+
+  <div class="sheet">
+    <h3><span>STARTOVNÍ LISTINA</span><span>MIN</span></h3>
+    <div class="r"><span class="i">01</span><div class="d">Mobilita / rehab<small>kotník L · loket P</small></div><span class="m">30</span><span class="stamp">HOTOVO</span></div>
+    <div class="r"><span class="i">02</span><div class="d">Multi-event blok<small>dálka tech. · koule · 3×150 m</small></div><span class="m">120</span></div>
+    <div class="r"><span class="i">03</span><div class="d">Sauna + masáž<small>regenerace</small></div><span class="m">45</span></div>
+  </div>
+  <div class="load"><span>ACWR <b>1.12</b></span><span>sRPE·7d <b>2840</b></span><span>mono <b>1.4</b></span></div>
+
+  <button class="cta" id="go"><span>Hotovo</span><span>02 · multi-event</span></button>
+  <nav class="tabs"><a class="on"><b>DNES</b></a><a>TÝDEN</a><a>VÝKON</a><a>GRAFY</a><i class="g"></i></nav>
+</div>
+<script>
+document.getElementById('go').onclick=()=>{
+  const r=document.querySelectorAll('.r')[1];
+  if(r.querySelector('.stamp'))return;
+  const s=document.createElement('span');s.className='stamp new';s.textContent='HOTOVO';r.appendChild(s);
+  navigator.vibrate&&navigator.vibrate([8,30,14]);
+};
+</script>
+</body>
+</html>
