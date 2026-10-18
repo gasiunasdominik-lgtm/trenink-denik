@@ -11,7 +11,7 @@
  *      doplní jen prázdná pole dnešního check-inu (ruční zápis nepřepíše)
  */
 
-const VERSION = 3; // zvyš při změně; appka upozorní, když běží starší nasazení
+const VERSION = 4; // zvyš při změně; appka upozorní, když běží starší nasazení
 
 const SCHEMA = {
   Jednotky:     { key: 'id',         cols: ['id', 'datum', 'poradi', 'typ', 'nazev', 'detail', 'plan_min', 'min', 'rpe', 'srpe', 'poznamka', 'sprint_m', 'skoky', 'hody', 'prekazky', 'reg_min', 'zo', 'zn', 'zav', 'skip', 'smazano', 'ts'] },
@@ -100,20 +100,33 @@ function today_() { return Utilities.formatDate(new Date(), 'Europe/Prague', 'yy
 
 function num_(v) {
   if (v === null || v === undefined || v === '') return null;
-  const n = Number(String(v).replace(',', '.').replace(/[^\d.\-]/g, ''));
-  return isFinite(n) ? n : null;
+  // první číslo v textu – zkratka může poslat celý vzorek („48 count/min · Garmin · 18. 10.“)
+  const m = String(v).match(/-?\d+(?:[.,]\d+)?/);
+  return m ? Number(m[0].replace(',', '.')) : null;
 }
 
-/** Spánek v libovolné podobě → hodiny: 7,5 · "7:30" · 450 (min) · 27000 (s) · "7 h 30 min". */
+/**
+ * Spánek → hodiny. Umí jednu hodnotu i seznam úseků (jak ho pošle zkratka – úseky na řádcích),
+ * s jednotkami i bez: 7,5 · "7:30" · 450 (min) · 27000 (s) · "7 h 30 min" · "1 hr 23 min\n2 hr 5 min".
+ */
 function hours_(v) {
   if (v === null || v === undefined || v === '') return null;
-  const t = String(v);
-  const hm = t.match(/(\d+)\s*(?:h|hod)[^\d]*(\d+)?/i) || t.match(/^(\d+):(\d{2})/);
-  if (hm) return Math.round((Number(hm[1]) + Number(hm[2] || 0) / 60) * 100) / 100;
-  const n = num_(t);
-  if (n === null) return null;
-  const h = n > 1000 ? n / 3600 : n > 24 ? n / 60 : n;
-  return Math.round(h * 100) / 100;
+  const lines = String(v).replace(/(\d)[\s ](?=\d{3}\b)/g, '$1').split(/[\n;]+/).map(s => s.trim()).filter(Boolean);
+  let total = 0, plain = 0, any = false;
+  const n = s => Number(s.replace(',', '.'));
+  lines.forEach(t => {
+    const colon = t.match(/^(\d+):(\d{2})/);
+    const h = t.match(/(\d+(?:[.,]\d+)?)\s*(?:h\b|hod|hr|hour)/i);
+    const m = t.match(/(\d+(?:[.,]\d+)?)\s*(?:min|m\b)/i);
+    const s = t.match(/(\d+(?:[.,]\d+)?)\s*(?:s\b|sec|sek)/i);
+    if (colon) { total += Number(colon[1]) + Number(colon[2]) / 60; any = true; }
+    else if (h || m || s) { total += (h ? n(h[1]) : 0) + (m ? n(m[1]) / 60 : 0) + (s ? n(s[1]) / 3600 : 0); any = true; }
+    else { const x = num_(t); if (x !== null) { plain += x; any = true; } }
+  });
+  if (!any) return null;
+  // čísla bez jednotek: podle velikosti sekundy / minuty / hodiny
+  total += plain > 1000 ? plain / 3600 : plain > 24 ? plain / 60 : plain;
+  return total > 0 && total < 20 ? Math.round(total * 100) / 100 : null;
 }
 
 function withLock_(fn) {

@@ -38,7 +38,7 @@ tools/     devserver.py · make_icons.py   lokální server bez cache, generáto
 
 ### Aktualizace skriptu
 
-Když se `apps-script/Code.gs` změní (fáze 2 = verze 2):
+Když se `apps-script/Code.gs` změní (aktuálně verze 4):
 
 1. **Google Sheets** (tvoje tabulka v prohlížeči na počítači) → **Rozšíření → Apps Script**.
 2. **Editor Apps Scriptu** → soubor `Kód.gs` → označ všechno (Ctrl+A) → vlož nový obsah `apps-script/Code.gs` z GitHubu → Ctrl+S.
@@ -55,7 +55,7 @@ Když se `apps-script/Code.gs` změní (fáze 2 = verze 2):
 ## Fáze 3: nedělní report a iOS zkratky
 
 - [docs/cowork-nedelni-report.md](docs/cowork-nedelni-report.md): prompt pro naplánovanou úlohu Clauda, která každou neděli zapíše report do listu Reporty (appka ho ukáže v TÝDNU).
-- [docs/ios-zkratky.md](docs/ios-zkratky.md): „Hej Siri, zapiš trénink“ a ranní import spánku a klidového tepu z Apple Health (Garmin → Zdraví). Potřebuje Apps Script verze 3.
+- [docs/ios-zkratky.md](docs/ios-zkratky.md): ranní import spánku a klidového tepu z Apple Health (Garmin → Zdraví). Potřebuje Apps Script verze 4.
 
 ## 3. Instalace na iPhone
 
