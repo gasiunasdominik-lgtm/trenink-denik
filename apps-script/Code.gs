@@ -7,11 +7,13 @@
  * GET  ?action=version&token=…           → { ok, version }
  * POST {"action":"push","token":…,"rows":[{sheet,row}]}  → upsert podle klíče, neznámé sloupce se doplní
  * POST {"action":"log","token":…,"nazev":"tyč technika","min":90,"rpe":7}            → jednotka navíc (iOS zkratka / Siri)
- * POST {"action":"wellness","token":…,"spanek":"7,5","rhr":48}                       → ranní import z Apple Health,
+ * POST {"action":"wellness","token":…,"spanek":"6:21:00
+12:59…","faze":"In Bed
+Core…","rhr":48}                     → ranní import z Apple Health,
  *      doplní jen prázdná pole dnešního check-inu (ruční zápis nepřepíše)
  */
 
-const VERSION = 5; // zvyš při změně; appka upozorní, když běží starší nasazení
+const VERSION = 6; // zvyš při změně; appka upozorní, když běží starší nasazení
 
 const SCHEMA = {
   Jednotky:     { key: 'id',         cols: ['id', 'datum', 'poradi', 'typ', 'nazev', 'detail', 'plan_min', 'min', 'rpe', 'srpe', 'poznamka', 'sprint_m', 'skoky', 'hody', 'prekazky', 'reg_min', 'zo', 'zn', 'zav', 'skip', 'smazano', 'ts'] },
@@ -105,28 +107,82 @@ function num_(v) {
   return m ? Number(m[0].replace(',', '.')) : null;
 }
 
-/**
- * Spánek → hodiny. Umí jednu hodnotu i seznam úseků (jak ho pošle zkratka – úseky na řádcích),
- * s jednotkami i bez: 7,5 · "7:30" · 450 (min) · 27000 (s) · "7 h 30 min" · "1 hr 23 min\n2 hr 5 min".
- */
-function hours_(v) {
+// Jedna délka: h:mm:ss | mm:ss (v seznamu) / h:mm (samotná hodnota) | „1 h 23 min 5 s“ | „23 min“ | „45 s“ | číslo bez jednotky
+const DUR_RE_ = new RegExp([
+  '(\\d+):(\\d{2}):(\\d{2})',
+  '(\\d+):(\\d{2})',
+  '(\\d+(?:[.,]\\d+)?)\\s*(?:h|hod[a-zá]*|hr|hrs|hours?)\\b(?:\\s*(\\d+(?:[.,]\\d+)?)\\s*(?:min[a-z]*|m)\\b)?(?:\\s*(\\d+)\\s*(?:s|sek[a-z]*|sec[a-z]*)\\b)?',
+  '(\\d+(?:[.,]\\d+)?)\\s*(?:min[a-z]*|m)\\b(?:\\s*(\\d+)\\s*(?:s|sek[a-z]*|sec[a-z]*)\\b)?',
+  '(\\d+(?:[.,]\\d+)?)\\s*(?:s|sek[a-z]*|sec[a-z]*)\\b',
+  '(\\d+(?:[.,]\\d+)?)',
+].join('|'), 'gi');
+
+/** Text se seznamem délek (řádky, mezery, středníky) → pole délek v hodinách, nebo null. */
+function durations_(v) {
   if (v === null || v === undefined || v === '') return null;
-  const lines = String(v).replace(/(\d)[\s ](?=\d{3}\b)/g, '$1').split(/[\n;]+/).map(s => s.trim()).filter(Boolean);
-  let total = 0, plain = 0, any = false;
-  const n = s => Number(s.replace(',', '.'));
-  lines.forEach(t => {
-    const colon = t.match(/^(\d+):(\d{2})/);
-    const h = t.match(/(\d+(?:[.,]\d+)?)\s*(?:h\b|hod|hr|hour)/i);
-    const m = t.match(/(\d+(?:[.,]\d+)?)\s*(?:min|m\b)/i);
-    const s = t.match(/(\d+(?:[.,]\d+)?)\s*(?:s\b|sec|sek)/i);
-    if (colon) { total += Number(colon[1]) + Number(colon[2]) / 60; any = true; }
-    else if (h || m || s) { total += (h ? n(h[1]) : 0) + (m ? n(m[1]) / 60 : 0) + (s ? n(s[1]) / 3600 : 0); any = true; }
-    else { const x = num_(t); if (x !== null) { plain += x; any = true; } }
+  // tisíce oddělené mezerou jen před jednotkou („12 600 s“), jinak by se slily sousední položky
+  const t = String(v).replace(/(\d)[\s ](?=\d{3}\s*(?:s\b|sek|sec|min))/g, '$1');
+  const f = x => (x === undefined ? 0 : Number(String(x).replace(',', '.')));
+  const items = [];
+  let m;
+  DUR_RE_.lastIndex = 0;
+  while ((m = DUR_RE_.exec(t))) items.push(m);
+  if (!items.length) return null;
+  const list = items.length > 1;
+  const plainOnly = items.every(x => x[12] !== undefined);
+  const plainSum = items.reduce((a, x) => a + f(x[12]), 0);
+  // čísla bez jednotek: podle velikosti součtu sekundy / minuty / hodiny
+  const plainDiv = plainSum > 1000 ? 3600 : plainSum > 24 ? 60 : 1;
+  return items.map(x => {
+    if (x[1] !== undefined) return f(x[1]) + f(x[2]) / 60 + f(x[3]) / 3600;
+    if (x[4] !== undefined) return list ? f(x[4]) / 60 + f(x[5]) / 3600 : f(x[4]) + f(x[5]) / 60; // iOS: pod hodinu „12:59“ = mm:ss
+    if (x[6] !== undefined) return f(x[6]) + f(x[7]) / 60 + f(x[8]) / 3600;
+    if (x[9] !== undefined) return f(x[9]) / 60 + f(x[10]) / 3600;
+    if (x[11] !== undefined) return f(x[11]) / 3600;
+    return f(x[12]) / (plainOnly ? plainDiv : 3600);
   });
-  if (!any) return null;
-  // čísla bez jednotek: podle velikosti sekundy / minuty / hodiny
-  total += plain > 1000 ? plain / 3600 : plain > 24 ? plain / 60 : plain;
-  return total > 0 && total < 20 ? Math.round(total * 100) / 100 : null;
+}
+
+const PHASE_RE_ = /in\s*bed|v\s*posteli|na\s*l[uů]žku|awake|vzh[uů]ru|bd[eě]n[ií]|core|j[aá]dro|deep|hlubok[a-zýáé]*|rem|asleep|unspecified|nespecifik[a-zé]*|lehk[a-zýé]*|light|sp[aá]nek/gi;
+const phaseKind_ = p => (/in\s*bed|posteli|l[uů]žku/i.test(p) ? 'inbed' : /awake|vzh[uů]ru|bd[eě]n/i.test(p) ? 'awake' : 'asleep');
+const h1_ = x => Math.round(x * 10) / 10;
+const czh_ = x => String(h1_(x)).replace('.', ',') + ' h';
+
+/**
+ * Spánek ze vzorků Zdraví → { h, detail }.
+ * Garmin zapisuje fáze (jádro, hluboký, REM, vzhůru) a navíc blok „V posteli“, který je překrývá.
+ * - S polem `faze` (hodnoty vzorků ve stejném pořadí): sečtou se fáze spánku, V posteli a Vzhůru se vynechají.
+ * - Bez něj: položka ≥ součtu ostatních = blok V posteli.
+ * Když fáze pokrývají méně než 85 % bloku (Garmin někdy nepošle všechny), bere se blok.
+ */
+function sleep_(spanek, faze) {
+  const d = durations_(spanek);
+  if (!d) return null;
+  const sum = a => a.reduce((s, x) => s + x, 0);
+  let h, detail;
+  const labels = faze ? (String(faze).match(PHASE_RE_) || []) : [];
+  if (labels.length && labels.length === d.length) {
+    const by = { inbed: 0, awake: 0, asleep: 0 };
+    labels.forEach((p, i) => { by[phaseKind_(p)] += d[i]; });
+    if (by.inbed && by.asleep < 0.85 * (by.inbed - by.awake)) {
+      h = by.inbed - by.awake;
+      detail = 'v posteli ' + czh_(by.inbed) + ', fáze neúplné (' + czh_(by.asleep) + ')';
+    } else {
+      h = by.asleep;
+      detail = 'fáze spánku' + (by.awake ? ', bez ' + czh_(by.awake) + ' vzhůru' : '');
+    }
+  } else {
+    const max = Math.max.apply(null, d), rest = sum(d) - max;
+    if (d.length > 1 && max >= rest) {
+      if (rest >= 0.85 * max) { h = rest; detail = 'fáze ' + czh_(rest) + ', blok v posteli vynechán'; }
+      else { h = max; detail = 'blok v posteli ' + czh_(max) + ', fáze neúplné (' + czh_(rest) + ')'; }
+    } else {
+      h = sum(d);
+      detail = d.length > 1 ? 'součet ' + d.length + ' úseků' : '';
+    }
+    if (faze && labels.length !== d.length) detail += (detail ? ', ' : '') + 'počet fází nesedí (' + labels.length + '/' + d.length + ')';
+  }
+  return h > 0 && h < 16 ? { h: h1_(h), detail: detail } : null;
 }
 
 function withLock_(fn) {
@@ -157,7 +213,8 @@ function importWellness_(b) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const datum = b.datum || today_();
   const cur = read_(sheet_(ss, 'Wellness')).find(r => String(r.datum) === datum) || { datum: datum };
-  const incoming = { spanek_h: hours_(b.spanek), rhr: num_(b.rhr), hrv: num_(b.hrv) };
+  const sl = sleep_(b.spanek, b.faze);
+  const incoming = { spanek_h: sl ? sl.h : null, rhr: num_(b.rhr), hrv: num_(b.hrv) };
   const filled = [];
   Object.keys(incoming).forEach(k => {
     if (incoming[k] !== null && (cur[k] === '' || cur[k] === undefined || cur[k] === null)) { cur[k] = incoming[k]; filled.push(k); }
@@ -165,9 +222,9 @@ function importWellness_(b) {
   // diagnostika pro oznámení ve zkratce: co přišlo a proč se něco nezapsalo
   const notes = [];
   if (incoming.spanek_h === null) {
-    const raw = String(b.spanek === undefined ? '' : b.spanek).replace(/\s+/g, ' ').trim();
+    const raw = String(b.spanek === undefined ? '' : b.spanek).trim().replace(/\s*\n\s*/g, ' | ').replace(/\s+/g, ' ');
     notes.push(raw ? 'spánek nečitelný (přišlo: „' + raw.slice(0, 60) + '“)' : 'spánek nepřišel – ve zkratce chybí akce Najít vzorky se spánkem');
-  } else if (filled.indexOf('spanek_h') < 0) notes.push('spánek už zapsaný (' + cur.spanek_h + ' h)');
+  } else if (filled.indexOf('spanek_h') < 0) notes.push('spánek už zapsaný (' + cur.spanek_h + ' h; ze Zdraví by bylo ' + czh_(sl.h) + ')');
   if (incoming.rhr === null) notes.push('tep nepřišel');
   else if (filled.indexOf('rhr') < 0) notes.push('tep už zapsaný (' + cur.rhr + ')');
 
@@ -175,7 +232,7 @@ function importWellness_(b) {
     cur.ts = new Date().toISOString();
     upsert_(sheet_(ss, 'Wellness'), 'datum', [cur]);
   }
-  const done = filled.map(k => ({ spanek_h: 'spánek ' + cur.spanek_h + ' h', rhr: 'tep ' + cur.rhr, hrv: 'HRV ' + cur.hrv })[k]);
+  const done = filled.map(k => ({ spanek_h: 'spánek ' + czh_(cur.spanek_h) + (sl.detail ? ' (' + sl.detail + ')' : ''), rhr: 'tep ' + cur.rhr, hrv: 'HRV ' + cur.hrv })[k]);
   return { text: (done.length ? 'Zapsáno: ' + done.join(', ') : 'Nic nového') + (notes.length ? ' · ' + notes.join(' · ') : '') };
 }
 

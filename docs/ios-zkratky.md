@@ -2,7 +2,7 @@
 
 Doplní do dnešního check-inu **spánek** a **klidový tep** z Apple Health (Garmin → Zdraví). Přepíše jen prázdná pole, takže co vyplníš ručně, zůstane. Ráno pak v check-inu stačí HRV a pocity.
 
-Potřebuješ Apps Script **verze 5** (README → Aktualizace skriptu) a z **appky Deník → ozubené kolečko → Google Sheet** opsanou **URL** (končí na `/exec`) a **token**.
+Potřebuješ Apps Script **verze 6** (README → Aktualizace skriptu) a z **appky Deník → ozubené kolečko → Google Sheet** opsanou **URL** (končí na `/exec`) a **token**.
 
 ---
 
@@ -33,11 +33,9 @@ Do pole **Hledat akce** dole postupně napiš a přidej:
 
 - Typ: **Spánek** (Sleep)
 - **Přidat filtr** → **Datum začátku** → **je v posledních** → **1** **dni**
-- **Přidat filtr** → **Hodnota** → **není** → **Vzhůru** (Awake)
-- **Přidat filtr** → **Hodnota** → **není** → **V posteli** (In Bed)
-- Nahoře v akci musí být **Vše z podmínek**. **Seřadit podle: Žádné**, **Omezit: vypnuto**.
+- **Seřadit podle: Žádné**, **Omezit: vypnuto**. Další filtry nejsou potřeba.
 
-Garmin zapisuje spánek po fázích (jádro, hluboký, REM, vzhůru). Skript sečte délky všech poslaných fází, proto se fáze „Vzhůru“ vyřazuje.
+Garmin zapisuje spánek po fázích (jádro, hluboký, REM, vzhůru) a navíc jeden dlouhý blok „V posteli“, který fáze překrývá. Skript si to rozebere sám: blok nezapočítá dvakrát a čas vzhůru vynechá.
 
 ### Akce 3: Získat obsah URL
 
@@ -45,7 +43,7 @@ Garmin zapisuje spánek po fázích (jádro, hluboký, REM, vzhůru). Skript se�
 - Klepni na šipku **›** u akce:
   - **Metoda:** **POST**
   - **Tělo požadavku:** **JSON**
-- Klepni na **Přidat nové pole** → **Text** a vyplň klíč a hodnotu. Celkem 4 pole:
+- Klepni na **Přidat nové pole** → **Text** a vyplň klíč a hodnotu. Celkem 5 polí:
 
 | Klíč | Hodnota |
 |---|---|
@@ -53,14 +51,15 @@ Garmin zapisuje spánek po fázích (jádro, hluboký, REM, vzhůru). Skript se�
 | `action` | `wellness` |
 | `rhr` | podrž prst v poli hodnoty → **Vybrat proměnnou** → klepni na výsledek **akce 1** (Vzorky zdraví) |
 | `spanek` | stejně → klepni na výsledek **akce 2**. Pak klepni na vloženou modrou bublinu a zvol **Doba trvání** |
+| `faze` | znovu výsledek **akce 2** → klepni na bublinu → zvol **Hodnota** (In Bed / Core / Deep / REM / Awake) |
 
-Když u `spanek` možnost Doba trvání nenajdeš, vlož jen bublinu. Ale potom určitě přidej filtr spánku z akce 2.
+Pole `faze` je páté. Díky němu skript přesně pozná, která délka patří ke které fázi. Bez něj spánek odhadne.
 
 ### Akce 4: Zobrazit oznámení
 
 - Do textu vlož proměnnou **Obsah URL** (výsledek akce 3).
 
-Hotovo. Zkratku spusť ručně (klepnutím na její dlaždici). Oznámení má ukázat třeba `{"ok":true,"text":"Zapsáno: spánek 7.38 h, tep 48"}`. Když něco chybí, napíše proč, např. „spánek nepřišel – ve zkratce chybí akce Najít vzorky se spánkem“.
+Hotovo. Zkratku spusť ručně (klepnutím na její dlaždici). Oznámení má ukázat třeba `{"ok":true,"text":"Zapsáno: spánek 6,3 h (fáze spánku, bez 0,1 h vzhůru), tep 41"}`. Když něco chybí, napíše proč, např. „spánek nepřišel – ve zkratce chybí akce Najít vzorky se spánkem“.
 
 **Ověření:** v **Google Sheets → list Wellness** je u dnešního data vyplněný `spanek_h` a `rhr`. V **appce → DNES → Ranní check-in** jsou hodnoty předvyplněné. Appku před tím zavři a otevři, ať si data stáhne.
 
@@ -79,10 +78,12 @@ Garmin Connect musí mít noc už nahranou do Zdraví. Když oznámení napíše
 Pošli mi screenshot obrazovky, kde ses zasekl, nebo přesné znění oznámení:
 
 - `Špatný token`: token v akci 3 se neshoduje s tím v appce.
-- `Neznámá akce`: v Apps Scriptu běží starší verze, nasaď verzi 5.
+- `Neznámá akce`: v Apps Scriptu běží starší verze, nasaď verzi 6.
 - `Nic nového · spánek už zapsaný…`: dnešní hodnoty už v Sheetu jsou.
 - `spánek nepřišel`: akce 2 je Filtrovat místo Najít, nebo pole `spanek` v akci 3 neukazuje na akci 2.
 - `spánek nečitelný (přišlo: …)`: v poli `spanek` chybí vlastnost **Doba trvání**. Klepni na bublinu a vyber ji.
+- `počet fází nesedí`: pole `faze` neukazuje na stejnou akci jako `spanek`, nebo u něj chybí vlastnost **Hodnota**.
+- `fáze neúplné`: Garmin do Zdraví neposlal všechny fáze. Skript proto vzal blok V posteli bez času vzhůru. Porovnej s délkou spánku v Garmin Connect.
 - Spánek ve Zdraví vůbec není (krok 0): spánek zadávej v ranním check-inu. Krokovač je předvyplněný včerejší hodnotou, takže stačí upravit o pár kliknutí.
 
 ---
