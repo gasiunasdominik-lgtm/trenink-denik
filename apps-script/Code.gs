@@ -11,7 +11,7 @@
  *      doplní jen prázdná pole dnešního check-inu (ruční zápis nepřepíše)
  */
 
-const VERSION = 4; // zvyš při změně; appka upozorní, když běží starší nasazení
+const VERSION = 5; // zvyš při změně; appka upozorní, když běží starší nasazení
 
 const SCHEMA = {
   Jednotky:     { key: 'id',         cols: ['id', 'datum', 'poradi', 'typ', 'nazev', 'detail', 'plan_min', 'min', 'rpe', 'srpe', 'poznamka', 'sprint_m', 'skoky', 'hody', 'prekazky', 'reg_min', 'zo', 'zn', 'zav', 'skip', 'smazano', 'ts'] },
@@ -22,7 +22,7 @@ const SCHEMA = {
   // fáze 2 – listy se založí už teď
   Zavody:       { key: 'id',         cols: ['id', 'datum', 'zavod', 'misto', 'disciplina', 'vykon', 'vykon_txt', 'vitr', 'rucne', 'poradi', 'body', 'poznamka', 'smazano', 'ts'] },
   Testy:        { key: 'id',         cols: ['id', 'datum', 'test', 'kategorie', 'hodnota', 'jednotka', 'poznamka', 'smazano', 'ts'] },
-  PB_Plany:     { key: 'disciplina', cols: ['disciplina', 'pb', 'pb_datum', 'plan_letos', 'vykon_letos', 'plan_pristi', 'rekord_cr', 'rekord_sr', 'ts'] },
+  PB_Plany:     { key: 'disciplina', cols: ['disciplina', 'pb', 'pb_datum', 'plan_letos', 'vykon_letos', 'plan_pristi', 'rekord_cr', 'rekord_cr_drzitel', 'rekord_sr', 'rekord_sr_drzitel', 'ts'] },
   Telesne_miry: { key: 'datum',      cols: ['datum', 'vaha', 'vyska', 'tuk_pct', 'rhr', 'ts'] },
 };
 
@@ -162,10 +162,21 @@ function importWellness_(b) {
   Object.keys(incoming).forEach(k => {
     if (incoming[k] !== null && (cur[k] === '' || cur[k] === undefined || cur[k] === null)) { cur[k] = incoming[k]; filled.push(k); }
   });
-  if (!filled.length) return { text: 'Nic nového – dnešní hodnoty už jsou zapsané nebo nedorazila data ze Zdraví.' };
-  cur.ts = new Date().toISOString();
-  upsert_(sheet_(ss, 'Wellness'), 'datum', [cur]);
-  return { text: 'Ze Zdraví: ' + filled.map(k => ({ spanek_h: 'spánek ' + cur.spanek_h + ' h', rhr: 'tep ' + cur.rhr, hrv: 'HRV ' + cur.hrv })[k]).join(', ') };
+  // diagnostika pro oznámení ve zkratce: co přišlo a proč se něco nezapsalo
+  const notes = [];
+  if (incoming.spanek_h === null) {
+    const raw = String(b.spanek === undefined ? '' : b.spanek).replace(/\s+/g, ' ').trim();
+    notes.push(raw ? 'spánek nečitelný (přišlo: „' + raw.slice(0, 60) + '“)' : 'spánek nepřišel – ve zkratce chybí akce Najít vzorky se spánkem');
+  } else if (filled.indexOf('spanek_h') < 0) notes.push('spánek už zapsaný (' + cur.spanek_h + ' h)');
+  if (incoming.rhr === null) notes.push('tep nepřišel');
+  else if (filled.indexOf('rhr') < 0) notes.push('tep už zapsaný (' + cur.rhr + ')');
+
+  if (filled.length) {
+    cur.ts = new Date().toISOString();
+    upsert_(sheet_(ss, 'Wellness'), 'datum', [cur]);
+  }
+  const done = filled.map(k => ({ spanek_h: 'spánek ' + cur.spanek_h + ' h', rhr: 'tep ' + cur.rhr, hrv: 'HRV ' + cur.hrv })[k]);
+  return { text: (done.length ? 'Zapsáno: ' + done.join(', ') : 'Nic nového') + (notes.length ? ' · ' + notes.join(' · ') : '') };
 }
 
 // ---------- interní ----------

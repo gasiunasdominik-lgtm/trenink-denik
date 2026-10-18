@@ -53,20 +53,28 @@ function viewPB() {
         h('span.dl-bar', h('i', { style: { width: `${Math.min(100, (p || 0) / 10)}%` } }),
           pp != null ? h('em', { style: { left: `${Math.min(100, pp / 10)}%` }, title: 'plán' }) : null),
         h('small', [`letos ${letos ? formatPerf(d.id, letos.vykon) : '–'}`, `plán ${formatPerf(d.id, r.plan_letos)}`,
-          `příští ${formatPerf(d.id, r.plan_pristi)}`].join(' · '))),
+          `příští ${formatPerf(d.id, r.plan_pristi)}`].join(' · ')),
+        records(d.id, r)),
       h('span.pts', p != null ? p : '–'));
   }));
 
   const others = h('div.pb-list', OTHER.map(d => {
     const r = pbOf(d.id);
     return h('button.pb-row', { type: 'button', on: { click: () => editPB(d.id) } },
-      h('b', d.label), h('span', formatPerf(d.id, r.pb)), h('small', r.pb_datum ? dmy(r.pb_datum) : ''));
+      h('b', d.label), h('span', formatPerf(d.id, r.pb)), h('small', r.pb_datum ? dmy(r.pb_datum) : ''), records(d.id, r));
   }));
 
   return [hero,
     h('p.legend-line', h('i.lg-bar'), 'body z PB (0–1000)', h('i.lg-tick'), 'plán letos'),
     lanes, h('h3.sect.pad', 'Další disciplíny'), others,
     h('p.muted.pad', 'Body podle tabulek World Athletics. PB se doplní samo z výsledků v Závodech, ručně ho přepíšeš ťuknutím na řádek.')];
+}
+
+/** Řádek s rekordy pod disciplínou – jen když jsou vyplněné. */
+function records(id, r) {
+  const one = (label, v, who) => (v != null ? `${label} ${formatPerf(id, v)}${who ? ` (${who})` : ''}` : null);
+  const txt = [one('Český rekord', r.rekord_cr, r.rekord_cr_drzitel), one('Světový rekord', r.rekord_sr, r.rekord_sr_drzitel)].filter(Boolean).join(' · ');
+  return txt ? h('small.records', txt) : null;
 }
 
 function editPB(id) {
@@ -84,13 +92,17 @@ function editPB(id) {
     upd();
     return field(label, h('div', inp, hint));
   };
+  const textIn = (key, label, placeholder) =>
+    field(label, h('input.text-in', { value: r[key] || '', placeholder, on: { input: e => (r[key] = e.target.value.trim() || null) } }));
   const sheet = openSheet({ title: d.label, full: true, body: [
     perfIn('pb', 'Osobní rekord'),
     field('Datum PB', h('input.text-in', { type: 'date', value: r.pb_datum || '', on: { change: e => (r.pb_datum = e.target.value) } })),
     perfIn('plan_letos', `Plán ${year()}`),
     perfIn('plan_pristi', `Plán ${year() + 1}`),
-    perfIn('rekord_cr', 'ČR'),
-    perfIn('rekord_sr', 'SR'),
+    perfIn('rekord_cr', 'Český rekord'),
+    textIn('rekord_cr_drzitel', 'Držitel českého rekordu', 'jméno, rok'),
+    perfIn('rekord_sr', 'Světový rekord'),
+    textIn('rekord_sr_drzitel', 'Držitel světového rekordu', 'jméno, rok'),
     h('div.sheet-actions', h('button.btn-primary', { on: { click: async () => { await store.saveRow('pb', r); sheet.close(); } } }, 'Uložit')),
   ] });
 }

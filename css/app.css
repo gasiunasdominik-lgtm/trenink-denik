@@ -365,6 +365,8 @@ h3.sect.pad { margin-top: 22px; }
 .pb-row b { font-weight: 800; text-transform: uppercase; font-variation-settings: "wdth" 70; }
 .pb-row span { font-weight: 800; font-size: 20px; font-variation-settings: "wdth" 62; }
 .pb-row small { color: var(--dim); font-size: 12px; text-align: right; }
+.pb-row .records { grid-column: 1 / -1; text-align: left; margin-top: -4px; }
+.records { display: block; font-size: 12px; color: var(--dim); }
 .perf-hint { display: block; margin-top: 4px; font-size: 13px; color: var(--dim); min-height: 1em; }
 
 /* Závody */

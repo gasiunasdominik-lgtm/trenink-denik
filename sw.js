@@ -1,5 +1,5 @@
 // Service worker: appka funguje offline. Při změně souborů zvyš VERSION.
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/main.js', 'js/config.js', 'js/lib/dates.js',

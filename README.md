@@ -38,7 +38,7 @@ tools/     devserver.py · make_icons.py   lokální server bez cache, generáto
 
 ### Aktualizace skriptu
 
-Když se `apps-script/Code.gs` změní (aktuálně verze 4):
+Když se `apps-script/Code.gs` změní (aktuálně verze 5):
 
 1. **Google Sheets** (tvoje tabulka v prohlížeči na počítači) → **Rozšíření → Apps Script**.
 2. **Editor Apps Scriptu** → soubor `Kód.gs` → označ všechno (Ctrl+A) → vlož nový obsah `apps-script/Code.gs` z GitHubu → Ctrl+S.
@@ -55,7 +55,7 @@ Když se `apps-script/Code.gs` změní (aktuálně verze 4):
 ## Fáze 3: nedělní report a iOS zkratky
 
 - [docs/cowork-nedelni-report.md](docs/cowork-nedelni-report.md): prompt pro naplánovanou úlohu Clauda, která každou neděli zapíše report do listu Reporty (appka ho ukáže v TÝDNU).
-- [docs/ios-zkratky.md](docs/ios-zkratky.md): ranní import spánku a klidového tepu z Apple Health (Garmin → Zdraví). Potřebuje Apps Script verze 4.
+- [docs/ios-zkratky.md](docs/ios-zkratky.md): ranní import spánku a klidového tepu z Apple Health (Garmin → Zdraví). Potřebuje Apps Script verze 5.
 
 ## 3. Instalace na iPhone
 
@@ -81,7 +81,7 @@ Po každé změně souborů, kterou nasazuješ, zvyš `VERSION` v `sw.js`. Jinak
 | Nastaveni | klic | hodnota (JSON), ts |
 | Zavody | id | datum, zavod, misto, disciplina, vykon (s nebo m), vykon_txt, vitr, rucne, poradi, body (WA), poznamka, ts |
 | Testy | id | datum, test, kategorie, hodnota, jednotka, poznamka, ts |
-| PB_Plany | disciplina | pb, pb_datum, plan_letos, vykon_letos, plan_pristi, rekord_cr, rekord_sr, ts |
+| PB_Plany | disciplina | pb, pb_datum, plan_letos, vykon_letos, plan_pristi, rekord_cr (český rekord), rekord_cr_drzitel, rekord_sr (světový rekord), rekord_sr_drzitel, ts |
 | Telesne_miry | datum | vaha, vyska, tuk_pct, rhr, ts |
 
 Konflikty řeší pravidlo „novější `ts` vyhrává“. Všechny buňky jsou textové, aby Sheets nepřeváděl data a časy na vlastní typy.

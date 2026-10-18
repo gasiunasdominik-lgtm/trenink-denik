@@ -2,7 +2,7 @@
 
 Doplní do dnešního check-inu **spánek** a **klidový tep** z Apple Health (Garmin → Zdraví). Přepíše jen prázdná pole, takže co vyplníš ručně, zůstane. Ráno pak v check-inu stačí HRV a pocity.
 
-Potřebuješ Apps Script **verze 4** (README → Aktualizace skriptu) a z **appky Deník → ozubené kolečko → Google Sheet** opsanou **URL** (končí na `/exec`) a **token**.
+Potřebuješ Apps Script **verze 5** (README → Aktualizace skriptu) a z **appky Deník → ozubené kolečko → Google Sheet** opsanou **URL** (končí na `/exec`) a **token**.
 
 ---
 
@@ -27,11 +27,17 @@ Do pole **Hledat akce** dole postupně napiš a přidej:
 - Zapni **Omezit** a nech **1**.
 - Filtr na datum nepřidávej.
 
-### Akce 2: Najít vzorky zdraví (znovu)
+### Akce 2: Najít vzorky zdravotních dat (spánek)
 
-- Typ: **Spánek**.
-- Klepni na **Přidat filtr** → **Počáteční datum** → **je v posledních** → **1** **dnech**.
-- Další filtr nepřidávej. Když nejde nastavit, nevadí: skript si spánek sečte sám.
+> Pozor: musí to být **Najít vzorky zdravotních dat**, ne **Filtrovat vzorky zdravotních dat**. Filtr hledá jen ve výsledku akce 1, tedy v jednom vzorku tepu, takže spánek nikdy nenajde.
+
+- Typ: **Spánek** (Sleep)
+- **Přidat filtr** → **Datum začátku** → **je v posledních** → **1** **dni**
+- **Přidat filtr** → **Hodnota** → **není** → **Vzhůru** (Awake)
+- **Přidat filtr** → **Hodnota** → **není** → **V posteli** (In Bed)
+- Nahoře v akci musí být **Vše z podmínek**. **Seřadit podle: Žádné**, **Omezit: vypnuto**.
+
+Garmin zapisuje spánek po fázích (jádro, hluboký, REM, vzhůru). Skript sečte délky všech poslaných fází, proto se fáze „Vzhůru“ vyřazuje.
 
 ### Akce 3: Získat obsah URL
 
@@ -54,7 +60,7 @@ Když u `spanek` možnost Doba trvání nenajdeš, vlož jen bublinu. Ale potom 
 
 - Do textu vlož proměnnou **Obsah URL** (výsledek akce 3).
 
-Hotovo. Zkratku spusť ručně (klepnutím na její dlaždici). Oznámení má ukázat třeba `{"ok":true,"text":"Ze Zdraví: spánek 7.38 h, tep 48"}`.
+Hotovo. Zkratku spusť ručně (klepnutím na její dlaždici). Oznámení má ukázat třeba `{"ok":true,"text":"Zapsáno: spánek 7.38 h, tep 48"}`. Když něco chybí, napíše proč, např. „spánek nepřišel – ve zkratce chybí akce Najít vzorky se spánkem“.
 
 **Ověření:** v **Google Sheets → list Wellness** je u dnešního data vyplněný `spanek_h` a `rhr`. V **appce → DNES → Ranní check-in** jsou hodnoty předvyplněné. Appku před tím zavři a otevři, ať si data stáhne.
 
@@ -73,8 +79,11 @@ Garmin Connect musí mít noc už nahranou do Zdraví. Když oznámení napíše
 Pošli mi screenshot obrazovky, kde ses zasekl, nebo přesné znění oznámení:
 
 - `Špatný token`: token v akci 3 se neshoduje s tím v appce.
-- `Neznámá akce`: v Apps Scriptu běží starší verze, nasaď verzi 4.
-- `Nic nového…`: dnešní hodnoty už v Sheetu jsou, nebo ze Zdraví nic nepřišlo (krok 0).
+- `Neznámá akce`: v Apps Scriptu běží starší verze, nasaď verzi 5.
+- `Nic nového · spánek už zapsaný…`: dnešní hodnoty už v Sheetu jsou.
+- `spánek nepřišel`: akce 2 je Filtrovat místo Najít, nebo pole `spanek` v akci 3 neukazuje na akci 2.
+- `spánek nečitelný (přišlo: …)`: v poli `spanek` chybí vlastnost **Doba trvání**. Klepni na bublinu a vyber ji.
+- Spánek ve Zdraví vůbec není (krok 0): spánek zadávej v ranním check-inu. Krokovač je předvyplněný včerejší hodnotou, takže stačí upravit o pár kliknutí.
 
 ---
 
