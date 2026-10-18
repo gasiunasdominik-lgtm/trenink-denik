@@ -396,6 +396,7 @@ h3.sect.pad { margin-top: 22px; }
 .meet-h strong small { color: var(--dim); font-size: 12px; }
 .res { position: relative; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto 34px 52px; align-items: baseline; gap: 8px; padding: 11px 0; border-bottom: 1px solid var(--rule); text-align: left; }
 .res-d { font-weight: 700; text-transform: uppercase; font-variation-settings: "wdth" 70; }
+.res-note { display: block; font-size: 11px; color: var(--dim); text-transform: none; font-weight: 500; font-variation-settings: "wdth" 90; margin-top: 2px; }
 .res-v { font-weight: 800; font-size: 20px; font-variation-settings: "wdth" 62; font-variant-numeric: tabular-nums; }
 .res-v small { font-size: 12px; color: var(--dim); font-weight: 600; }
 .res-p { color: var(--dim); font-size: 14px; text-align: right; }

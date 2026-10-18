@@ -3,8 +3,8 @@
 import { DISCIPLINES } from '../config.js';
 import { parsePerf, points } from '../calc/wa.js';
 
-const PERF_FIELDS = { Zavody: ['vykon'], PB_Plany: ['pb', 'vykon_letos', 'plan_letos', 'plan_pristi', 'rekord_cr', 'rekord_sr'] };
-const DATE_FIELDS = ['datum', 'pb_datum'];
+const PERF_FIELDS = { Zavody: ['vykon'], PB_Plany: ['pb', 'pb_venku', 'pb_hala', 'vykon_letos', 'plan_letos', 'plan_pristi', 'rekord_cr', 'rekord_sr'] };
+const DATE_FIELDS = ['datum', 'pb_datum', 'pb_venku_datum', 'pb_hala_datum'];
 
 const plain = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[\s.]/g, '');
 const BY_NAME = new Map(DISCIPLINES.flatMap(d => [[plain(d.id), d.id], [plain(d.label), d.id]]));

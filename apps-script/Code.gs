@@ -26,7 +26,7 @@ const SCHEMA = {
   // fáze 2 – listy se založí už teď
   Zavody:       { key: 'id',         cols: ['id', 'datum', 'zavod', 'misto', 'disciplina', 'vykon', 'vykon_txt', 'vitr', 'rucne', 'poradi', 'body', 'poznamka', 'smazano', 'ts'] },
   Testy:        { key: 'id',         cols: ['id', 'datum', 'test', 'kategorie', 'hodnota', 'jednotka', 'poznamka', 'smazano', 'ts'] },
-  PB_Plany:     { key: 'disciplina', cols: ['disciplina', 'pb', 'pb_datum', 'plan_letos', 'vykon_letos', 'plan_pristi', 'rekord_cr', 'rekord_cr_drzitel', 'rekord_sr', 'rekord_sr_drzitel', 'ts'] },
+  PB_Plany:     { key: 'disciplina', cols: ['disciplina', 'pb', 'pb_datum', 'plan_letos', 'vykon_letos', 'plan_pristi', 'rekord_cr', 'rekord_cr_drzitel', 'rekord_sr', 'rekord_sr_drzitel', 'pb_zavod', 'pb_venku', 'pb_venku_datum', 'pb_hala', 'pb_hala_datum', 'ts'] },
   Telesne_miry: { key: 'datum',      cols: ['datum', 'vaha', 'vyska', 'tuk_pct', 'rhr', 'ts'] },
 };
 

@@ -8,7 +8,7 @@ import { tap } from '../ui/haptics.js';
 import * as store from '../data/store.js';
 import { DISCIPLINES, TEST_CATEGORIES } from '../config.js';
 import { disc, parsePerf, formatPerf, points, better } from '../calc/wa.js';
-import { DECATHLON, OTHER, pbOf, best, decathlonSums, allTests, testValues, asymmetry } from '../calc/perf.js';
+import { DECATHLON, OTHER, pbOf, isPbResult, best, decathlonSums, allTests, testValues, asymmetry } from '../calc/perf.js';
 import { today, dm, fromKey } from '../lib/dates.js';
 
 const SUBS = [['pb', 'PB'], ['zavody', 'Závody'], ['testy', 'Testy'], ['telo', 'Tělo']];
@@ -45,15 +45,18 @@ function viewPB() {
     const r = pbOf(d.id);
     const p = r.pb != null ? points(d.id, r.pb) : null;
     const pp = r.plan_letos != null ? points(d.id, r.plan_letos) : null;
-    const letos = best(d.id, year());
+    // výkon letos: lepší z výsledků v Závodech a sloupce vykon_letos (Cowork ho bere i z disciplín s jiným názvem)
+    const fromRes = best(d.id, year())?.vykon;
+    const letos = fromRes == null ? r.vykon_letos : r.vykon_letos == null || better(d.id, fromRes, r.vykon_letos) ? fromRes : r.vykon_letos;
     return h('button.dec-lane', { type: 'button', on: { click: () => editPB(d.id) } },
       h('span.n', i + 1),
       h('span.dl',
         h('span.dl-top', h('b', d.label), h('span.pbv', formatPerf(d.id, r.pb))),
         h('span.dl-bar', h('i', { style: { width: `${Math.min(100, (p || 0) / 10)}%` } }),
           pp != null ? h('em', { style: { left: `${Math.min(100, pp / 10)}%` }, title: 'plán' }) : null),
-        h('small', [`letos ${letos ? formatPerf(d.id, letos.vykon) : '–'}`, `plán ${formatPerf(d.id, r.plan_letos)}`,
+        h('small', [`letos ${formatPerf(d.id, letos)}`, `plán ${formatPerf(d.id, r.plan_letos)}`,
           `příští ${formatPerf(d.id, r.plan_pristi)}`].join(' · ')),
+        venkuHala(d.id, r),
         records(d.id, r)),
       h('span.pts', p != null ? p : '–'));
   }));
@@ -68,6 +71,13 @@ function viewPB() {
     h('p.legend-line', h('i.lg-bar'), 'body z PB (0–1000)', h('i.lg-tick'), 'plán letos'),
     lanes, h('h3.sect.pad', 'Další disciplíny'), others,
     h('p.muted.pad', 'Body podle tabulek World Athletics. PB se doplní samo z výsledků v Závodech, ručně ho přepíšeš ťuknutím na řádek.')];
+}
+
+/** PB venku / v hale (sloupce od Cowork úlohy) – jen když jsou vyplněné. */
+function venkuHala(id, r) {
+  const one = (label, v, d) => (v != null ? `${label} ${formatPerf(id, v)}${d ? ` (${dmy(d)})` : ''}` : null);
+  const txt = [one('venku', r.pb_venku, r.pb_venku_datum), one('hala', r.pb_hala, r.pb_hala_datum)].filter(Boolean).join(' · ');
+  return txt ? h('small.records', txt) : null;
 }
 
 /** Řádek s rekordy pod disciplínou – jen když jsou vyplněné. */
@@ -96,6 +106,9 @@ function editPB(id) {
     field(label, h('input.text-in', { value: r[key] || '', placeholder, on: { input: e => (r[key] = e.target.value.trim() || null) } }));
   const sheet = openSheet({ title: d.label, full: true, body: [
     perfIn('pb', 'Osobní rekord'),
+    r.pb_zavod ? h('p.muted', `PB: ${r.pb_zavod}`) : null,
+    perfIn('pb_venku', 'PB venku'),
+    perfIn('pb_hala', 'PB v hale'),
     field('Datum PB', h('input.text-in', { type: 'date', value: r.pb_datum || '', on: { change: e => (r.pb_datum = e.target.value) } })),
     perfIn('plan_letos', `Plán ${year()}`),
     perfIn('plan_pristi', `Plán ${year() + 1}`),
@@ -116,7 +129,6 @@ function viewResults() {
     if (!groups.has(k)) groups.set(k, []);
     groups.get(k).push(r);
   });
-  const pbIds = new Set(DISCIPLINES.map(d => best(d.id)?.id).filter(Boolean));
 
   return [
     h('div.pad', h('button.btn-primary', { on: { click: () => editResult(null) } }, '+ Výsledek')),
@@ -129,7 +141,8 @@ function viewResults() {
         h('header.meet-h', h('b', rows[0].zavod || 'Bez názvu'), h('span', [dmy(rows[0].datum), rows[0].misto].filter(Boolean).join(' · ')),
           multi.length >= 2 ? h('strong', `Σ ${fmt(sum)} b.`, h('small', ` ${multi.length}/10`)) : null),
         rows.map(r => h('button.res', { type: 'button', on: { click: () => editResult(r) } },
-          h('span.res-d', disc(r.disciplina)?.label || r.disciplina, pbIds.has(r.id) ? h('span.res-pb', 'PB') : null),
+          h('span.res-d', disc(r.disciplina)?.label || r.disciplina, isPbResult(r) ? h('span.res-pb', 'PB') : null,
+            r.poznamka ? h('small.res-note', r.poznamka) : null),
           h('span.res-v', r.vykon_txt || formatPerf(r.disciplina, r.vykon), r.rucne ? h('small', ' r.') : null,
             r.vitr != null ? h('small', ` ${r.vitr > 0 ? '+' : ''}${fmt(r.vitr, 1)}`) : null),
           h('span.res-p', r.poradi ? `${r.poradi}.` : ''),
