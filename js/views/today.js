@@ -36,7 +36,7 @@ export function renderToday(datum = today()) {
         h('small',
           [w.hrv != null && `HRV ${w.hrv} ms ${r?.hrvDelta != null ? signed(r.hrvDelta, 0, ' %') : ''}`, w.rhr != null && `tep ${w.rhr}${r?.rhrDelta != null && Math.abs(r.rhrDelta) >= 1 ? ` (${signed(r.rhrDelta)})` : ''}`].filter(Boolean).join(' · ') || null,
           h('br'),
-          [w.spanek_h != null && `spánek ${hm(w.spanek_h)}`, ['unava', 'svaly', 'nalada'].every(k => w[k] != null) && `${w.unava}/${w.svaly}/${w.nalada}`].filter(Boolean).join(' · '),
+          [w.spanek_h != null && `spánek ${hm(w.spanek_h)}${w.v_posteli_h != null ? ` / ${hm(w.v_posteli_h)}` : ''}`, ['unava', 'svaly', 'nalada'].every(k => w[k] != null) && `${w.unava}/${w.svaly}/${w.nalada}`].filter(Boolean).join(' · '),
           painMax(w) ? h('span.pain-note', h('br'), 'bolí: ', Object.keys(w.bolest).join(', ')) : null))
     : h('button.state.state-cta', { type: 'button', on: { click: () => openCheckin(datum, refresh) } },
         h('b', 'Ranní check-in'), h('small', 'HRV · tep · spánek · pocity', h('br'), '≈ 20 s'));

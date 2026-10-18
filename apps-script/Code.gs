@@ -7,17 +7,20 @@
  * GET  ?action=version&token=…           → { ok, version }
  * POST {"action":"push","token":…,"rows":[{sheet,row}]}  → upsert podle klíče, neznámé sloupce se doplní
  * POST {"action":"log","token":…,"nazev":"tyč technika","min":90,"rpe":7}            → jednotka navíc (iOS zkratka / Siri)
- * POST {"action":"wellness","token":…,"spanek":"6:21:00
-12:59…","faze":"In Bed
-Core…","rhr":48}                     → ranní import z Apple Health,
+ * POST {"action":"wellness","token":…,"rhr":48,"zacatek":"ISO
+…","konec":"ISO
+…","faze":"In Bed
+Core…","zdroj":"Garmin Connect
+…"}
+ *      (starší varianta: "spanek" = délky + "faze")                     → ranní import z Apple Health,
  *      doplní jen prázdná pole dnešního check-inu (ruční zápis nepřepíše)
  */
 
-const VERSION = 6; // zvyš při změně; appka upozorní, když běží starší nasazení
+const VERSION = 7; // zvyš při změně; appka upozorní, když běží starší nasazení
 
 const SCHEMA = {
   Jednotky:     { key: 'id',         cols: ['id', 'datum', 'poradi', 'typ', 'nazev', 'detail', 'plan_min', 'min', 'rpe', 'srpe', 'poznamka', 'sprint_m', 'skoky', 'hody', 'prekazky', 'reg_min', 'zo', 'zn', 'zav', 'skip', 'smazano', 'ts'] },
-  Wellness:     { key: 'datum',      cols: ['datum', 'cas', 'hrv', 'rhr', 'spanek_h', 'spanek_q', 'unava', 'svaly', 'nalada', 'bolest', 'ts'] },
+  Wellness:     { key: 'datum',      cols: ['datum', 'cas', 'hrv', 'rhr', 'spanek_h', 'v_posteli_h', 'spanek_zdroj', 'spanek_q', 'unava', 'svaly', 'nalada', 'bolest', 'ts'] },
   Tydny:        { key: 'tyden',      cols: ['tyden', 'zhodnoceni', 'ts'] },
   Reporty:      { key: 'id',         cols: ['id', 'tyden', 'datum', 'titulek', 'text', 'ts'] },
   Nastaveni:    { key: 'klic',       cols: ['klic', 'hodnota', 'ts'] },
@@ -209,22 +212,102 @@ function logUnit_(b) {
   return { text: 'Zapsáno: ' + row.nazev + (min !== null ? ', ' + min + ' min' : '') + (rpe !== null ? ', RPE ' + rpe : '') };
 }
 
+// ---------- spánek z intervalů (zkratka posílá začátek, konec, fázi a zdroj každého vzorku) ----------
+
+const lines_ = v => (v === null || v === undefined ? [] : String(v).split(/\r?\n/).map(s => s.trim()).filter(Boolean));
+
+/** ISO 8601 („2026-10-19T07:12:00+02:00“) nebo český zápis („19. 10. 2026 v 7:12“, „19.10.26 7:12“) → Date. */
+function parseWhen_(s) {
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) { const d = new Date(s); return isNaN(d) ? null : d; }
+  const m = s.match(/(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{2,4})\D+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (!m) return null;
+  const p = n => ('0' + n).slice(-2);
+  const y = m[3].length === 2 ? '20' + m[3] : m[3]; // krátký formát data („19.10.26 7:12“)
+  return Utilities.parseDate(y + '-' + p(m[2]) + '-' + p(m[1]) + ' ' + p(m[4]) + ':' + m[5] + ':' + (m[6] || '00'), 'Europe/Prague', 'yyyy-MM-dd HH:mm:ss');
+}
+
+/** Délka sjednocení intervalů v hodinách (překryvy a duplicity se nepočítají dvakrát). */
+function unionHours_(iv) {
+  const s = iv.slice().sort((a, b) => a[0] - b[0]);
+  let total = 0, cs = null, ce = null;
+  s.forEach(([a, b]) => {
+    if (ce === null || a > ce) { if (ce !== null) total += ce - cs; cs = a; ce = b; }
+    else if (b > ce) ce = b;
+  });
+  if (ce !== null) total += ce - cs;
+  return total / 36e5;
+}
+
+const hm_ = d => Utilities.formatDate(d, 'Europe/Prague', 'H:mm');
+
+/**
+ * Poslední noc z paralelních seznamů zacatek/konec/faze/zdroj (jeden řádek = jeden vzorek).
+ * Okno: od 18:00 předchozího dne do teď. Jeden zdroj: Garmin, jinak ten s nejvíc spánkem.
+ * Spánek = sjednocení fází Asleep/Core/Deep/REM. V posteli = sjednocení In Bed, jinak první–poslední vzorek.
+ */
+function sleepNight_(b, now) {
+  const zs = lines_(b.zacatek), ks = lines_(b.konec), fs = lines_(b.faze), src = lines_(b.zdroj);
+  if (!zs.length) return null;
+  if (zs.length !== ks.length || zs.length !== fs.length) return { error: 'seznamy mají různou délku (začátky ' + zs.length + ', konce ' + ks.length + ', fáze ' + fs.length + ')' };
+  now = now || new Date();
+  const hh = Number(Utilities.formatDate(now, 'Europe/Prague', 'H')), mm = Number(Utilities.formatDate(now, 'Europe/Prague', 'm'));
+  const sinceMidnight = (hh * 60 + mm) * 6e4;
+  const winStart = new Date(now.getTime() - sinceMidnight - (hh >= 18 ? -18 : 6) * 36e5);
+
+  const samples = [];
+  for (let i = 0; i < zs.length; i++) {
+    const a = parseWhen_(zs[i]), e = parseWhen_(ks[i]);
+    if (!a || !e) return { error: 'nečitelné datum „' + (a ? ks[i] : zs[i]).slice(0, 40) + '“ – v poli zacatek/konec nastav formát data ISO 8601' };
+    if (e <= winStart || a >= now) continue;
+    samples.push({ a: Math.max(a.getTime(), winStart.getTime()), e: Math.min(e.getTime(), now.getTime()), kind: phaseKind_(fs[i]), src: src[i] || '?' });
+  }
+  if (!samples.length) return { error: 'žádný spánek od 18:00 včerejška' };
+
+  const bySrc = {};
+  samples.forEach(s => { (bySrc[s.src] = bySrc[s.src] || []).push(s); });
+  const asleepOf = list => unionHours_(list.filter(s => s.kind === 'asleep').map(s => [s.a, s.e]));
+  const names = Object.keys(bySrc);
+  const source = names.find(n => /garmin/i.test(n) && asleepOf(bySrc[n]) > 0)
+    || names.sort((x, y) => asleepOf(bySrc[y]) - asleepOf(bySrc[x]))[0];
+  const own = bySrc[source];
+
+  let sleep = asleepOf(own);
+  const bedIv = own.filter(s => s.kind === 'inbed').map(s => [s.a, s.e]);
+  const first = Math.min.apply(null, own.map(s => s.a)), last = Math.max.apply(null, own.map(s => s.e));
+  let bed = bedIv.length ? unionHours_(bedIv) : (last - first) / 36e5;
+  if (!sleep && bedIv.length) sleep = bed - unionHours_(own.filter(s => s.kind === 'awake').map(s => [s.a, s.e])); // zdroj bez fází
+  bed = Math.max(bed, sleep);
+  if (!(sleep > 0 && sleep < 16)) return { error: 'spánek mimo rozsah (' + czh_(sleep) + ')' };
+  return {
+    h: h1_(sleep), bed: h1_(bed),
+    detail: source + ', ' + hm_(new Date(first)) + '–' + hm_(new Date(last)) + ', v posteli ' + czh_(bed) + (names.length > 1 ? ', ostatní zdroje vynechány' : ''),
+  };
+}
+
 function importWellness_(b) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const datum = b.datum || today_();
   const cur = read_(sheet_(ss, 'Wellness')).find(r => String(r.datum) === datum) || { datum: datum };
-  const sl = sleep_(b.spanek, b.faze);
-  const incoming = { spanek_h: sl ? sl.h : null, rhr: num_(b.rhr), hrv: num_(b.hrv) };
+  // nový formát (intervaly) má přednost, starý (součet délek) zůstává jako záloha
+  const sl = b.zacatek !== undefined ? sleepNight_(b) : sleep_(b.spanek, b.faze);
+  const ok = sl && !sl.error;
+  const incoming = { spanek_h: ok ? sl.h : null, rhr: num_(b.rhr), hrv: num_(b.hrv) };
   const filled = [];
+  // spánek z dřívějšího importu (nebo zjevně chybný > 13 h) se smí přepsat, ruční zápis z check-inu ne
+  const sleepReplaceable = cur.spanek_zdroj === 'zdravi' || num_(cur.spanek_h) > 13;
   Object.keys(incoming).forEach(k => {
-    if (incoming[k] !== null && (cur[k] === '' || cur[k] === undefined || cur[k] === null)) { cur[k] = incoming[k]; filled.push(k); }
+    const empty = cur[k] === '' || cur[k] === undefined || cur[k] === null;
+    const replace = k === 'spanek_h' && sleepReplaceable && incoming[k] !== num_(cur[k]);
+    if (incoming[k] !== null && (empty || replace)) { cur[k] = incoming[k]; filled.push(k); }
   });
+  if (filled.indexOf('spanek_h') >= 0) { cur.spanek_zdroj = 'zdravi'; if (sl.bed) cur.v_posteli_h = sl.bed; }
   // diagnostika pro oznámení ve zkratce: co přišlo a proč se něco nezapsalo
   const notes = [];
   if (incoming.spanek_h === null) {
-    const raw = String(b.spanek === undefined ? '' : b.spanek).trim().replace(/\s*\n\s*/g, ' | ').replace(/\s+/g, ' ');
-    notes.push(raw ? 'spánek nečitelný (přišlo: „' + raw.slice(0, 60) + '“)' : 'spánek nepřišel – ve zkratce chybí akce Najít vzorky se spánkem');
-  } else if (filled.indexOf('spanek_h') < 0) notes.push('spánek už zapsaný (' + cur.spanek_h + ' h; ze Zdraví by bylo ' + czh_(sl.h) + ')');
+    const raw = String(b.zacatek !== undefined ? b.zacatek : b.spanek === undefined ? '' : b.spanek).trim().replace(/\s*\n\s*/g, ' | ').replace(/\s+/g, ' ');
+    notes.push(sl && sl.error ? 'spánek: ' + sl.error
+      : raw ? 'spánek nečitelný (přišlo: „' + raw.slice(0, 60) + '“)' : 'spánek nepřišel – ve zkratce chybí akce Najít vzorky se spánkem');
+  } else if (filled.indexOf('spanek_h') < 0) notes.push('spánek už zapsaný ručně (' + cur.spanek_h + ' h; ze Zdraví by bylo ' + czh_(sl.h) + ')');
   if (incoming.rhr === null) notes.push('tep nepřišel');
   else if (filled.indexOf('rhr') < 0) notes.push('tep už zapsaný (' + cur.rhr + ')');
 

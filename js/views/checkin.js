@@ -86,7 +86,7 @@ export function openCheckin(datum = today(), onDone = () => {}) {
   function cardSleep() {
     w.spanek_h ??= prev?.spanek_h ?? 7.5;
     return card('Spánek',
-      on.spanek_h ? stepper({ value: w.spanek_h, step: 0.25, min: 0, max: 14, unit: 'h', format: hm, onChange: v => (w.spanek_h = v) }) : null,
+      on.spanek_h ? stepper({ value: w.spanek_h, step: 0.25, min: 0, max: 14, unit: 'h', format: hm, onChange: v => { w.spanek_h = v; w.spanek_zdroj = 'rucne'; } }) : null,
       on.spanek_q ? h('div.ci-sub', h('span.ci-l', 'Kvalita'),
         scale({ from: 1, to: 5, value: w.spanek_q, labels: { 1: 'hrozná', 5: 'skvělá' }, onPick: v => { w.spanek_q = v; next(); } })) : null,
     );

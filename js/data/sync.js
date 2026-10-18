@@ -17,7 +17,7 @@ const encode = row => Object.fromEntries(Object.entries(row).map(([k, v]) =>
 // Sheet má vše jako text – čísla vracíme na čísla (kromě klíčů a textových polí).
 const TEXT_FIELDS = ['id', 'datum', 'tyden', 'klic', 'cas', 'ts', 'nazev', 'detail', 'poznamka', 'text', 'titulek', 'zhodnoceni', 'typ',
   'zavod', 'misto', 'disciplina', 'vykon_txt', 'test', 'kategorie', 'jednotka', 'pb_datum',
-  'rekord_cr_drzitel', 'rekord_sr_drzitel'];
+  'rekord_cr_drzitel', 'rekord_sr_drzitel', 'spanek_zdroj'];
 const decode = row => Object.fromEntries(Object.entries(row).map(([k, v]) => {
   if (JSON_FIELDS.includes(k) && typeof v === 'string' && v.startsWith('{')) {
     try { return [k, JSON.parse(v)]; } catch { /* necháme text */ }
