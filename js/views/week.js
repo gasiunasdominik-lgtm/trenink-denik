@@ -5,6 +5,8 @@ import { dayRows } from '../calc/plan.js';
 import { readiness } from '../calc/readiness.js';
 import { otu, loadMetrics, srpe, acwrZone, isReg } from '../calc/load.js';
 import { weekDays, isoWeek, dowShort, dm, today } from '../lib/dates.js';
+import { campOn, campsBetween } from '../calc/camps.js';
+import { campList } from './camps.js';
 
 export function renderWeek(anchor, { onDay, onShift }) {
   const days = weekDays(anchor);
@@ -31,9 +33,10 @@ export function renderWeek(anchor, { onDay, onShift }) {
     const future = d > t;
     const main = rows.filter(x => !x.skipped && !isReg(x));
     const regMin = doneRows.filter(isReg).reduce((a, x) => a + (x.min || 0), 0);
-    return h('button.wk-lane' + (d === t ? '.is-today' : '') + (future ? '.future' : ''), { type: 'button', on: { click: () => onDay(d) } },
+    const inCamp = campOn(d);
+    return h('button.wk-lane' + (d === t ? '.is-today' : '') + (future ? '.future' : '') + (inCamp ? '.in-camp' : ''), { type: 'button', on: { click: () => onDay(d) } },
       h('span.wk-dow', dowShort(d), h('small', dm(d))),
-      h('span.wk-units', main.length ? main.map(x => h('span.wk-u' + (x.done ? '.done' : ''), x.nazev)) : h('span.wk-u.rest', 'Volno'),
+      h('span.wk-units', inCamp && !main.length && !future ? h('span.wk-u.rest', 'soustředění – nic nezapsáno') : main.length ? main.map(x => h('span.wk-u' + (x.done ? '.done' : ''), x.nazev)) : h('span.wk-u.rest', 'Volno'),
         regMin ? h('span.wk-reg', `+ REG ${regMin}′`) : null),
       h('span.wk-r', r ? h('b', { 'data-level': r.level }, r.score) : h('i', future ? '' : '–')),
       h('span.wk-min', min ? fmt(min) : '', h('small', load ? `${fmt(load)}` : '')),
@@ -68,7 +71,12 @@ export function renderWeek(anchor, { onDay, onShift }) {
     .filter(x => x.tyden === wk.key)
     .sort((a, b) => (reportKind(a).order - reportKind(b).order) || (b.ts || '').localeCompare(a.ts || ''));
 
-  return h('div.view.week', head, lanes, board,
+  const weekCamps = campsBetween(days[0], days[6]);
+  const campNote = weekCamps.length
+    ? h('div.wk-camp', weekCamps.map(c => h('span', h('b', 'Soustředění'), ` ${c.nazev} · ${dm(c.od)}–${dm(c.do)}`)))
+    : null;
+
+  return h('div.view.week', head, campNote, lanes, board,
     h('section.wk-eval', h('h3.sect', 'Zhodnocení týdne'), note),
     h('section.report',
       h('h3.sect', 'Claude'),
@@ -83,6 +91,7 @@ export function renderWeek(anchor, { onDay, onShift }) {
         : h('p.muted', days[6] <= t
             ? 'Pro tento týden zatím žádný report.'
             : 'Nedělní analýza přijde v neděli večer.')),
+    campList(),
   );
 }
 

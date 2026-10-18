@@ -18,7 +18,7 @@ Core…","zdroj":"Garmin Connect
 const VERSION = 9; // zvyš při změně; appka upozorní, když běží starší nasazení
 
 const SCHEMA = {
-  Jednotky:     { key: 'id',         cols: ['id', 'datum', 'poradi', 'typ', 'nazev', 'detail', 'plan_min', 'min', 'rpe', 'srpe', 'obsah', 'poznamka', 'sprint_m', 'skoky', 'hody', 'prekazky', 'reg_min', 'zo', 'zn', 'zav', 'skip', 'smazano', 'ts'] },
+  Jednotky:     { key: 'id',         cols: ['id', 'datum', 'poradi', 'typ', 'nazev', 'detail', 'plan_min', 'min', 'rpe', 'srpe', 'obsah', 'poznamka', 'sprint_m', 'skoky', 'hody', 'prekazky', 'reg_min', 'zo', 'zn', 'zav', 'faze_dne', 'soustredeni', 'skip', 'smazano', 'ts'] },
   Wellness:     { key: 'datum',      cols: ['datum', 'cas', 'hrv', 'rhr', 'spanek_h', 'v_posteli_h', 'spanek_zdroj', 'spanek_q', 'unava', 'svaly', 'nalada', 'bolest', 'ts'] },
   Tydny:        { key: 'tyden',      cols: ['tyden', 'zhodnoceni', 'ts'] },
   Reporty:      { key: 'id',         cols: ['id', 'tyden', 'typ', 'datum', 'titulek', 'text', 'ts'] },

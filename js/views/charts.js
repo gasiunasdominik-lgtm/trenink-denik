@@ -10,6 +10,7 @@ import { results, allTests, testValues, DECATHLON, OTHER } from '../calc/perf.js
 import { formatPerf } from '../calc/wa.js';
 import { today, addDays, range, weekStart, isoWeek, dm, hm, toKey } from '../lib/dates.js';
 import { SEASON_START_MONTH } from '../config.js';
+import { campsBetween, campOn } from '../calc/camps.js';
 
 const PERIODS = [['4t', '4 týdny'], ['sezona', 'Sezóna'], ['rok', 'Rok']];
 let period = '4t';
@@ -33,13 +34,28 @@ export function renderCharts(refresh) {
   const filter = h('nav.subtabs.sticky', PERIODS.map(([id, label]) =>
     h('button', { type: 'button', 'aria-pressed': String(period === id), on: { click: () => { period = id; tap(); refresh(); } } }, label)));
 
+  // ---- soustředění v období
+  const spans = campsBetween(from, to).map(c => ({ from: c.od, to: c.do, label: c.nazev }));
+
   // ---- zátěž
   const loads = dailyLoads(units);
   const acwr = days.map(d => ({ x: d, y: loadMetrics(units, d).acwr }));
+  // porovnání: průměrná denní zátěž na soustředění vs. běžné dny (dny bez tréninku = 0)
+  const past = days.filter(d => d <= to);
+  const campDays = past.filter(d => campOn(d)), normalDays = past.filter(d => !campOn(d));
+  const avg = ds => (ds.length ? ds.reduce((a, d) => a + (loads.get(d) || 0), 0) / ds.length : null);
+  const compare = campDays.length
+    ? h('div.otu-grid.compact.camp-compare',
+        h('div.otu-c', h('b', fmt(avg(campDays))), h('span', 'SOUSTŘ.'), h('small', 'AU/den')),
+        h('div.otu-c', h('b', normalDays.length ? fmt(avg(normalDays)) : '–'), h('span', 'BĚŽNĚ'), h('small', 'AU/den')),
+        h('div.otu-c', h('b', campDays.length), h('span', 'DNY'), h('small', 'soustř.')),
+        h('div.otu-c', h('b', normalDays.length && avg(normalDays) ? `${fmt((avg(campDays) / avg(normalDays) - 1) * 100)} %` : '–'), h('span', 'ROZDÍL'), h('small', 'zátěže')))
+    : null;
+
   const load = [
-    timeChart({ title: 'Denní zátěž', note: 'sRPE = minuty × RPE', type: 'bar', from, to,
+    timeChart({ title: 'Denní zátěž', spans, note: 'sRPE = minuty × RPE', type: 'bar', from, to,
       points: days.map(d => ({ x: d, y: loads.get(d) || null })), unit: ' AU' }),
-    timeChart({ title: 'ACWR 7/28', note: 'pásmo 0,8–1,3 · nad 1,5 riziko', from, to, points: acwr,
+    timeChart({ title: 'ACWR 7/28', spans, note: 'pásmo 0,8–1,3 · nad 1,5 riziko', from, to, points: acwr,
       band: { from: 0.8, to: 1.3 }, refs: [{ y: 1.5, label: '1,5' }], yMin: 0, yFormat: v => fmt(v, 2),
       empty: 'ACWR se počítá od 7 tréninkových dnů v posledních 4 týdnech.' }),
   ];
@@ -48,13 +64,13 @@ export function renderCharts(refresh) {
   const hrvB = baseline(w, addDays(to, 1), 'hrv');
   const rhrB = baseline(w, addDays(to, 1), 'rhr');
   const recovery = [
-    timeChart({ title: 'HRV', note: 'mySASY', from, to, unit: ' ms', dots: period === '4t',
+    timeChart({ title: 'HRV', spans, note: 'mySASY', from, to, unit: ' ms', dots: period === '4t',
       points: days.map(d => ({ x: d, y: w(d)?.hrv ?? null })),
       refs: hrvB ? [{ y: hrvB, label: 'baseline 28 d' }] : [] }),
-    timeChart({ title: 'Klidový tep', from, to, unit: ' bpm', dots: period === '4t',
+    timeChart({ title: 'Klidový tep', spans, from, to, unit: ' bpm', dots: period === '4t',
       points: days.map(d => ({ x: d, y: w(d)?.rhr ?? null })),
       refs: rhrB ? [{ y: rhrB, label: 'baseline 28 d' }] : [] }),
-    timeChart({ title: 'Spánek', note: 'hodiny', type: 'bar', from, to, yFormat: hm, refs: [{ y: 8, label: '8 h' }],
+    timeChart({ title: 'Spánek', spans, note: 'hodiny', type: 'bar', from, to, yFormat: hm, refs: [{ y: 8, label: '8 h' }],
       points: days.map(d => ({ x: d, y: w(d)?.spanek_h ?? null, note: w(d)?.spanek_q ? `kvalita ${w(d).spanek_q}/5` : '' })) }),
   ];
 
@@ -80,7 +96,8 @@ export function renderCharts(refresh) {
   const weeks = [];
   for (let k = weekStart(from); k <= to; k = addDays(k, 7)) {
     const o = otu(units, k);
-    weeks.push({ x: k, label: `T${isoWeek(k).week} (${dm(k)})`, values: { cz: o.cz, reg: o.reg }, o });
+    weeks.push({ x: k, label: `T${isoWeek(k).week} (${dm(k)})`, values: { cz: o.cz, reg: o.reg }, o,
+      camp: campsBetween(k, addDays(k, 6)).length > 0 });
   }
   const tot = weeks.reduce((a, wk) => ({ cz: a.cz + wk.o.cz, reg: a.reg + wk.o.reg, jed: a.jed + wk.o.jed, dny: a.dny + wk.o.dny, zav: a.zav + wk.o.zav }),
     { cz: 0, reg: 0, jed: 0, dny: 0, zav: 0 });
@@ -88,7 +105,7 @@ export function renderCharts(refresh) {
   return h('div.view.charts',
     h('header.page-head', h('h1', 'Grafy')),
     filter,
-    h('section.ch-sect', h('h3.sect', 'Zátěž'), load),
+    h('section.ch-sect', h('h3.sect', 'Zátěž'), compare, load),
     h('section.ch-sect', h('h3.sect', 'Regenerace'), recovery),
     h('section.ch-sect', h('h3.sect', 'Bolest'), pain),
     h('section.ch-sect', h('h3.sect', 'Progrese'),

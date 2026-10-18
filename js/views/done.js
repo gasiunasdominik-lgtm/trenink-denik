@@ -8,6 +8,8 @@ import { toast } from '../ui/toast.js';
 import * as store from '../data/store.js';
 import { TYPES } from '../config.js';
 import { today, dm, dowShort } from '../lib/dates.js';
+import { campOn } from '../calc/camps.js';
+import { DAY_PARTS } from '../calc/plan.js';
 
 const VOLUME = [
   ['sprint_m', 'Sprint', 'm'],
@@ -49,6 +51,15 @@ export function openDone(row, datum, onSaved = () => {}) {
     ...(row?.unit || {}),
   };
   const prev = row?.unit ? { ...row.unit } : null;
+  const camp = campOn(datum);
+  if (extra && !wasDone) {
+    // nová jednotka: na soustředění typ podle poslední jednotky soustředění, část dne podle hodiny
+    if (camp) {
+      const lastCamp = store.units().filter(x => x.soustredeni === camp.camp.nazev && x.min > 0).sort((a, b) => b.id.localeCompare(a.id))[0];
+      if (lastCamp) u.typ = lastCamp.typ;
+    }
+    if (datum === today()) { const hr = new Date().getHours(); u.faze_dne = hr < 9 ? 'rano' : hr < 12 ? 'dopoledne' : hr < 18 ? 'odpoledne' : 'vecer'; }
+  }
   const hist = () => history(u);
   const last = hist()[0];
 
@@ -106,6 +117,7 @@ export function openDone(row, datum, onSaved = () => {}) {
     } });
     body.push(
       field('Název', h('div', nameIn, h('datalist#unit-names', names.map(n => h('option', { value: n }))))),
+      field('Část dne', chips(DAY_PARTS.map(([value, label]) => ({ label, value })), v => (u.faze_dne = v), { active: u.faze_dne })),
       h('div.two', field('Typ', typSel),
         field('Datum', h('input.text-in', { type: 'date', value: u.datum, max: today(), on: { change: e => (u.datum = e.target.value || u.datum) } }))),
     );
@@ -141,7 +153,7 @@ export function openDone(row, datum, onSaved = () => {}) {
     h('button.btn-primary', { on: { click: save } }, wasDone ? 'Uložit změny' : 'Hotovo'),
     secondary.length ? h('div.row.split', secondary) : null);
 
-  const title = [u.nazev || 'Jednotka navíc', datum !== today() ? dm(datum) : null].filter(Boolean).join(' · ');
+  const title = [u.nazev || (camp ? 'Jednotka · soustředění' : 'Jednotka navíc'), datum !== today() ? dm(datum) : null].filter(Boolean).join(' · ');
   const sheet = openSheet({ title, body: [...body, actions], full: true });
 
   async function save() {
@@ -153,6 +165,9 @@ export function openDone(row, datum, onSaved = () => {}) {
       return;
     }
     if (!u.nazev.trim()) u.nazev = TYPES[u.typ]?.label || 'Trénink';
+    // jednotky ze soustředění nesou jeho název (pro report a porovnání zátěže)
+    const c = campOn(u.datum);
+    if (c) u.soustredeni = c.camp.nazev; else delete u.soustredeni;
     u.srpe = u.min * u.rpe;
     delete u.skip;
     delete u.smazano;

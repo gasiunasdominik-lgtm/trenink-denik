@@ -12,6 +12,8 @@ export const COLORS = {
   grid: '#262523',
   axis: '#8c877d',
   band: 'rgba(245,242,234,.07)',
+  camp: 'rgba(91,143,199,.18)',   // pásmo soustředění
+  campText: '#8fb3dc',
   ref: '#8c877d',
 };
 /** Sekvenční škála tartanu pro tmavý podklad: víc = světlejší. */
@@ -97,7 +99,7 @@ function axes(svg, { y, yt, plotH, from, to, yFormat }) {
  */
 export function timeChart(o) {
   const { title, note, points, from, to, type = 'line', height = 140, color = COLORS.primary,
-    yFormat = v => fmt(v), unit = '', band, refs = [], yMin, dots = false, empty = 'Zatím žádná data.' } = o;
+    yFormat = v => fmt(v), unit = '', band, refs = [], yMin, dots = false, spans = [], empty = 'Zatím žádná data.' } = o;
   const fig = frame(title, note);
   const valid = points.filter(p => p.y != null);
   if (!valid.length) { fig.append(h('p.chart-empty', empty)); return fig; }
@@ -113,6 +115,14 @@ export function timeChart(o) {
 
   const svg = s('svg', { viewBox: `0 0 ${W} ${height + PAD.t + PAD.b}`, class: 'chart-svg', role: 'img', 'aria-label': title });
   axes(svg, { y, yt, plotH: height, from, to, yFormat });
+  // svislá pásma (soustředění) za daty
+  spans.forEach(sp => {
+    const a = sp.from < from ? from : sp.from, b = sp.to > to ? to : sp.to;
+    if (a > b) return;
+    const x0 = PAD.l + (dayNum(a) - d0) * step, x1 = PAD.l + (dayNum(b) - d0 + 1) * step;
+    svg.append(s('rect', { x: x0, width: x1 - x0, y: PAD.t, height, fill: COLORS.camp }));
+    if (sp.label && x1 - x0 > 28) svg.append(s('text', { x: x0 + 3, y: PAD.t + 10, class: 'ax camp' }, sp.label));
+  });
   if (band) svg.append(s('rect', { x: PAD.l, width: plotW, y: y(band.to), height: y(band.from) - y(band.to), fill: COLORS.band }));
   refs.forEach(r => {
     svg.append(s('line', { x1: PAD.l, x2: W - PAD.r, y1: y(r.y), y2: y(r.y), stroke: COLORS.ref, 'stroke-width': 1 }));
@@ -148,7 +158,8 @@ export function timeChart(o) {
     if (!k) return null;
     const p = byDay.get(k) || [...byDay.values()].reduce((best, q) => (Math.abs(dayNum(q.x) - dayNum(k)) < Math.abs(dayNum(best.x) - dayNum(k)) ? q : best));
     if (Math.abs(dayNum(p.x) - dayNum(k)) > Math.max(3, days / 30)) return null;
-    return { x: x(p.x), html: `<b>${yFormat(p.y)}${unit}</b> ${dm(p.x)}${p.note ? ` · ${p.note}` : ''}` };
+    const sp = spans.find(z => z.from <= p.x && p.x <= z.to);
+    return { x: x(p.x), html: `<b>${yFormat(p.y)}${unit}</b> ${dm(p.x)}${p.note ? ` · ${p.note}` : ''}${sp ? ' · soustředění' : ''}` };
   });
   fig.append(wrap, tableView(['Datum', title], [...valid].reverse().map(p => [dm(p.x) + fromKey(p.x).getFullYear(), yFormat(p.y) + unit])));
   return fig;
@@ -167,6 +178,7 @@ export function stackedWeeks({ title, note, series, data, height = 140, unit = '
   const svg = s('svg', { viewBox: `0 0 ${W} ${height + PAD.t + PAD.b}`, class: 'chart-svg', role: 'img', 'aria-label': title });
   axes(svg, { y, yt, plotH: height, from: data[0].x, to: data[data.length - 1].x, yFormat: v => fmt(v) });
   data.forEach((d, i) => {
+    if (d.camp) svg.append(s('rect', { x: PAD.l + i * step, width: step, y: PAD.t, height, fill: COLORS.camp }));
     let acc = 0;
     series.forEach(sr => {
       const v = d.values[sr.key] || 0;
@@ -182,9 +194,10 @@ export function stackedWeeks({ title, note, series, data, height = 140, unit = '
     const i = Math.floor((px - PAD.l) / step);
     const d = data[i];
     if (!d) return null;
-    return { x: PAD.l + i * step + step / 2, html: `<b>${d.label}</b> ` + series.map(sr => `${sr.label} ${fmt(d.values[sr.key] || 0)}${unit}`).join(' · ') };
+    return { x: PAD.l + i * step + step / 2, html: `<b>${d.label}</b>${d.camp ? ' soustředění' : ''} ` + series.map(sr => `${sr.label} ${fmt(d.values[sr.key] || 0)}${unit}`).join(' · ') };
   });
-  const legend = h('div.legend', series.map(sr => h('span', h('i', { style: { background: sr.color } }), sr.label)));
+  const legend = h('div.legend', series.map(sr => h('span', h('i', { style: { background: sr.color } }), sr.label)),
+    data.some(d => d.camp) ? h('span', h('i', { style: { background: COLORS.camp } }), 'soustředění') : null);
   fig.append(legend, wrap, tableView(['Týden', ...series.map(sr => sr.label)], [...data].reverse().map(d => [d.label, ...series.map(sr => fmt(d.values[sr.key] || 0))])));
   return fig;
 }

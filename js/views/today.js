@@ -7,6 +7,8 @@ import { readiness, painMax } from '../calc/readiness.js';
 import { loadMetrics, acwrZone } from '../calc/load.js';
 import { today, isoWeek, dayOfYear, dowShort, dm, hm, addDays } from '../lib/dates.js';
 import { TYPES } from '../config.js';
+import { campOn } from '../calc/camps.js';
+import { DAY_PARTS } from '../calc/plan.js';
 import { openCheckin } from './checkin.js';
 import { openDone } from './done.js';
 
@@ -27,6 +29,8 @@ export function renderToday(datum = today(), { onDay } = {}) {
   const load = loadMetrics(store.units(), datum);
   const v = bgFor(datum);
   const wk = isoWeek(datum);
+  const camp = campOn(datum);
+  const partLabel = k => DAY_PARTS.find(([key]) => key === k)?.[1];
 
   const refresh = () => {}; // překreslení řeší subscribe v main.js
 
@@ -67,7 +71,7 @@ export function renderToday(datum = today(), { onDay } = {}) {
       },
         h('span.n', i + 1),
         h('span.t', row.nazev, h('small', row.done
-          ? [`RPE ${row.rpe}`, row.obsah || row.poznamka].filter(Boolean).join(' · ')
+          ? [partLabel(row.faze_dne), `RPE ${row.rpe}`, row.obsah || row.poznamka].filter(Boolean).join(' · ')
           : row.skipped ? 'vynecháno – ťukni pro zápis' : row.detail || '')),
         h('span.v', row.done ? row.min : row.min ?? row.plan?.min ?? '–', h('i', '′')),
         row.done ? stamp(row.ts, justStamped === row.id) : null,
@@ -75,7 +79,7 @@ export function renderToday(datum = today(), { onDay } = {}) {
       return lane;
     }),
     h('button.lane.lane-add', { type: 'button', on: { click: () => openDone(null, datum, id => { justStamped = id; }) } },
-      h('span.n', '+'), h('span.t', 'Jednotka navíc', h('small', 'mimo šablonu')), h('span.v')),
+      h('span.n', '+'), h('span.t', camp ? 'Jednotka' : 'Jednotka navíc', h('small', camp ? 'typ, minuty, RPE, obsah' : 'mimo šablonu')), h('span.v')),
   );
   setTimeout(() => { justStamped = null; }, 600);
 
@@ -102,12 +106,21 @@ export function renderToday(datum = today(), { onDay } = {}) {
   const open = rows.filter(x => !x.done && !x.skipped);
   const nextRow = open.find(x => !TYPES[x.typ]?.reg) ?? open[0];
   const checkinFirst = !w && isToday && new Date().getHours() < 12;
-  const cta = checkinFirst
+  const addUnit = () => openDone(null, datum, id => { justStamped = id; });
+  const cta = camp && !checkinFirst
+    ? h('button.cta', { on: { click: addUnit } }, h('span', '+ Jednotka'), h('small', `soustředění · den ${camp.day}/${camp.total}`))
+    : checkinFirst
     ? h('button.cta', { on: { click: () => openCheckin(datum, refresh) } }, 'Ranní check-in')
     : nextRow
       ? h('button.cta', { on: { click: () => openDone(nextRow, datum, id => { justStamped = id; }) } },
           h('span', 'Hotovo'), h('small', nextRow.nazev))
       : h('button.cta.cta-quiet', { on: { click: () => openDone(null, datum, id => { justStamped = id; }) } }, 'Den splněn · + jednotka');
 
-  return h('div.view.today', track, connect, banner, dayswitch, lanes, bar, h('div.cta-wrap', cta));
+  const campStrip = camp
+    ? h('div.camp-strip', h('b', `Soustředění · den ${camp.day}/${camp.total}`),
+        h('span', [camp.camp.nazev, camp.camp.misto].filter(Boolean).join(' · ')),
+        h('small', 'Bez týdenní šablony – jednotky přidávej tlačítkem + Jednotka.'))
+    : null;
+
+  return h('div.view.today' + (camp ? '.camp' : ''), track, campStrip, connect, banner, dayswitch, lanes, bar, h('div.cta-wrap', cta));
 }

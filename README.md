@@ -56,6 +56,15 @@ Když se `apps-script/Code.gs` změní (aktuálně verze 9):
 - Nedělní report píše samostatná Cowork úloha do listu **Reporty**; appka ho ukáže v **TÝDNU → Claude · nedělní analýza** (formát: `## nadpis`, `- odrážka`, `**tučně**`).
 - [docs/ios-zkratky.md](docs/ios-zkratky.md): ranní import spánku, času v posteli a klidového tepu z Apple Health (Garmin → Zdraví). Potřebuje Apps Script verze 8+.
 
+## Soustředění
+
+**TÝDEN → dole Soustředění → + Soustředění:** název, místo, od–do, poznámka. Ve dnech soustředění:
+- appka nepředvyplňuje týdenní šablonu,
+- DNES přepne do modrého režimu „Soustředění · den X/Y“ a jednotky se přidávají tlačítkem **+ Jednotka** (s částí dne: ráno / dopoledne / odpoledne / večer, JED se počítá po jednotkách),
+- TÝDEN a GRAFY soustředění vyznačí a GRAFY porovnají průměrnou denní zátěž se zbytkem období.
+
+Soustředění se ukládají v listu **Nastaveni** (řádek `settings`, pole `camps`). Každá jednotka ze soustředění má v listu **Jednotky** sloupec `soustredeni` s jeho názvem.
+
 ## 3. Instalace na iPhone
 
 Otevři adresu v **Safari** a dej **Sdílet → Přidat na plochu**. Appka se spustí přes celou obrazovku a funguje offline. Zápisy bez signálu čekají ve frontě a odešlou se, jakmile se telefon připojí (v Nastavení vidíš „ve frontě N“).
@@ -73,7 +82,7 @@ Po každé změně souborů, kterou nasazuješ, zvyš `VERSION` v `sw.js`. Jinak
 
 | List | Klíč | Sloupce |
 |---|---|---|
-| Jednotky | id | datum, poradi, typ, nazev, detail, plan_min, min, rpe, srpe, obsah, poznamka, sprint_m, skoky, hody, prekazky, reg_min, zo, zn, zav, skip, smazano, ts |
+| Jednotky | id | datum, poradi, typ, nazev, detail, plan_min, min, rpe, srpe, obsah, poznamka, faze_dne, soustredeni, sprint_m, skoky, hody, prekazky, reg_min, zo, zn, zav, skip, smazano, ts |
 | Wellness | datum | cas, hrv, rhr, spanek_h, v_posteli_h, spanek_zdroj (zdravi / rucne), spanek_q, unava, svaly, nalada (1–5, 5 = nejlepší), bolest (JSON partie → 1–3), ts |
 | Tydny | tyden (`2026-W42`) | zhodnoceni, ts |
 | Reporty | id / tyden | datum, titulek, text, ts – plní Claude (fáze 3) |
