@@ -63,21 +63,35 @@ export function renderWeek(anchor, { onDay, onShift }) {
   const note = h('textarea.text-in.wk-note', { rows: 4, placeholder: 'Co fungovalo, co ne, jak tělo, co příští týden…' }, rec?.zhodnoceni || '');
   note.addEventListener('change', () => store.saveWeek({ tyden: wk.key, zhodnoceni: note.value }));
 
-  const report = store.reports()
+  // všechny záznamy týdne: nedělní analýza první, pak ostatní (import výsledků…) od nejnovějšího
+  const reports = store.reports()
     .filter(x => x.tyden === wk.key)
-    .sort((a, b) => (b.ts || '').localeCompare(a.ts || ''))[0];
+    .sort((a, b) => (reportKind(a).order - reportKind(b).order) || (b.ts || '').localeCompare(a.ts || ''));
 
   return h('div.view.week', head, lanes, board,
     h('section.wk-eval', h('h3.sect', 'Zhodnocení týdne'), note),
     h('section.report',
-      h('h3.sect', 'Claude · nedělní analýza'),
-      report
-        ? h('article.report-card', h('small', [report.datum, report.titulek].filter(Boolean).join(' · ')),
-            reportBody(report.text))
+      h('h3.sect', 'Claude'),
+      reports.length
+        ? reports.map(r => {
+            const k = reportKind(r);
+            return h('article.report-card', { 'data-kind': k.id },
+              h('h4.report-kind', k.label),
+              h('small', [r.datum, r.titulek].filter(Boolean).join(' · ')),
+              reportBody(r.text));
+          })
         : h('p.muted', days[6] <= t
-            ? 'Report pro tento týden zatím není. Píše ho naplánovaná úloha Clauda v neděli večer.'
-            : 'Report přijde v neděli večer.')),
+            ? 'Pro tento týden zatím žádný report.'
+            : 'Nedělní analýza přijde v neděli večer.')),
   );
+}
+
+/** Druh záznamu v listu Reporty: sloupec typ, jinak podle id / titulku. */
+function reportKind(r) {
+  const typ = String(r.typ || '').toLowerCase();
+  if (typ.startsWith('vysled') || /^vysledky/i.test(r.id || '') || /^atletika\.cz/i.test(r.titulek || '')) return { id: 'vysledky', label: 'Import výsledků z atletika.cz', order: 1 };
+  if (!typ || typ.startsWith('report') || typ.startsWith('nedel') || /^\d{4}-W\d{2}$/.test(r.id || '')) return { id: 'report', label: 'Nedělní analýza', order: 0 };
+  return { id: typ, label: r.typ, order: 2 };
 }
 
 /** Jednoduchý markdown z reportu: ## nadpis, - odrážky, **tučně**. Vkládá se jako text, ne HTML. */

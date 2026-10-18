@@ -116,6 +116,12 @@ function editPB(id) {
     textIn('rekord_cr_drzitel', 'Držitel českého rekordu', 'jméno, rok'),
     perfIn('rekord_sr', 'Světový rekord'),
     textIn('rekord_sr_drzitel', 'Držitel světového rekordu', 'jméno, rok'),
+    perfIn('rekord_cr_u23', 'Český rekord U23'),
+    textIn('rekord_cr_u23_drzitel', 'Držitel českého rekordu U23', 'jméno, rok'),
+    perfIn('rekord_cr_u20', 'Český rekord U20'),
+    textIn('rekord_cr_u20_drzitel', 'Držitel českého rekordu U20', 'jméno, rok'),
+    perfIn('rekord_sr_u20', 'Světový rekord U20'),
+    textIn('rekord_sr_u20_drzitel', 'Držitel světového rekordu U20', 'jméno, rok'),
     h('div.sheet-actions', h('button.btn-primary', { on: { click: async () => { await store.saveRow('pb', r); sheet.close(); } } }, 'Uložit')),
   ] });
 }

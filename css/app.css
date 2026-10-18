@@ -300,6 +300,9 @@ textarea.text-in { resize: vertical; line-height: 1.4; }
 .otu-c small { font-size: 11px; color: var(--dim); margin-left: 4px; }
 .otu .loadbar { padding-left: 0; padding-right: 0; }
 .report-card { border-left: 4px solid var(--tartan); padding: 4px 0 4px 14px; font-size: 15px; line-height: 1.5; -webkit-user-select: text; user-select: text; }
+.report-card + .report-card { margin-top: 18px; }
+.report-card .report-kind { margin: 0 0 2px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
+.report-card[data-kind="vysledky"] { border-left-color: var(--second, #5b8fc7); }
 .report-card small { display: block; color: var(--dim); font-size: 12px; margin-bottom: 6px; }
 .report-card p, .report-card ul { margin-top: 8px; }
 .report-card h4 { margin-top: 14px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--tartan-l); }

@@ -21,12 +21,13 @@ const SCHEMA = {
   Jednotky:     { key: 'id',         cols: ['id', 'datum', 'poradi', 'typ', 'nazev', 'detail', 'plan_min', 'min', 'rpe', 'srpe', 'obsah', 'poznamka', 'sprint_m', 'skoky', 'hody', 'prekazky', 'reg_min', 'zo', 'zn', 'zav', 'skip', 'smazano', 'ts'] },
   Wellness:     { key: 'datum',      cols: ['datum', 'cas', 'hrv', 'rhr', 'spanek_h', 'v_posteli_h', 'spanek_zdroj', 'spanek_q', 'unava', 'svaly', 'nalada', 'bolest', 'ts'] },
   Tydny:        { key: 'tyden',      cols: ['tyden', 'zhodnoceni', 'ts'] },
-  Reporty:      { key: 'id',         cols: ['id', 'tyden', 'datum', 'titulek', 'text', 'ts'] },
+  Reporty:      { key: 'id',         cols: ['id', 'tyden', 'typ', 'datum', 'titulek', 'text', 'ts'] },
   Nastaveni:    { key: 'klic',       cols: ['klic', 'hodnota', 'ts'] },
   // fáze 2 – listy se založí už teď
   Zavody:       { key: 'id',         cols: ['id', 'datum', 'zavod', 'misto', 'disciplina', 'vykon', 'vykon_txt', 'vitr', 'rucne', 'poradi', 'body', 'poznamka', 'smazano', 'ts'] },
   Testy:        { key: 'id',         cols: ['id', 'datum', 'test', 'kategorie', 'hodnota', 'jednotka', 'poznamka', 'smazano', 'ts'] },
-  PB_Plany:     { key: 'disciplina', cols: ['disciplina', 'pb', 'pb_datum', 'plan_letos', 'vykon_letos', 'plan_pristi', 'rekord_cr', 'rekord_cr_drzitel', 'rekord_sr', 'rekord_sr_drzitel', 'pb_zavod', 'pb_venku', 'pb_venku_datum', 'pb_hala', 'pb_hala_datum', 'ts'] },
+  PB_Plany:     { key: 'disciplina', cols: ['disciplina', 'pb', 'pb_datum', 'plan_letos', 'vykon_letos', 'plan_pristi', 'rekord_cr', 'rekord_cr_drzitel', 'rekord_sr', 'rekord_sr_drzitel', 'pb_zavod', 'pb_venku', 'pb_venku_datum', 'pb_hala', 'pb_hala_datum',
+    'rekord_cr_u20', 'rekord_cr_u20_drzitel', 'rekord_sr_u20', 'rekord_sr_u20_drzitel', 'rekord_cr_u23', 'rekord_cr_u23_drzitel', 'ts'] },
   Telesne_miry: { key: 'datum',      cols: ['datum', 'vaha', 'vyska', 'tuk_pct', 'rhr', 'ts'] },
 };
 

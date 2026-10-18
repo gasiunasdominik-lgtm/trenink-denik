@@ -3,7 +3,7 @@
 import { DISCIPLINES } from '../config.js';
 import { parsePerf, points } from '../calc/wa.js';
 
-const PERF_FIELDS = { Zavody: ['vykon'], PB_Plany: ['pb', 'pb_venku', 'pb_hala', 'vykon_letos', 'plan_letos', 'plan_pristi', 'rekord_cr', 'rekord_sr'] };
+const PERF_FIELDS = { Zavody: ['vykon'], PB_Plany: ['pb', 'pb_venku', 'pb_hala', 'vykon_letos', 'plan_letos', 'plan_pristi', 'rekord_cr', 'rekord_sr', 'rekord_cr_u20', 'rekord_sr_u20', 'rekord_cr_u23'] };
 const DATE_FIELDS = ['datum', 'pb_datum', 'pb_venku_datum', 'pb_hala_datum'];
 
 const plain = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[\s.]/g, '');
