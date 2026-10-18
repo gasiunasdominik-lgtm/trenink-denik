@@ -18,8 +18,7 @@ js/calc/   load.js · readiness.js · plan.js · wa.js · perf.js   zátěž a O
 js/ui/     dom · inputs · sheet · haptics · track-bg · chart · celebrate   UI stavebnice, 11 tartanových pozadí, SVG grafy, PB oslava
 js/views/  today · checkin · done · week · performance · charts · settings
 apps-script/Code.gs                       backend nad Sheetem
-tools/     devserver.py · make_icons.py · make_icon_variants.py   lokální server bez cache, generátor ikon a variant A–F
-icons.html                                náhled variant ikony (icons/varianty/)
+tools/     devserver.py · make_icons.py   lokální server bez cache, generátor ikony „Dráha“
 ```
 
 ## 1. Google Sheet + Apps Script (jednorázově, ~5 min)
@@ -74,7 +73,7 @@ Otevři adresu v **Safari** a dej **Sdílet → Přidat na plochu**. Appka se sp
 
 ```
 python tools/devserver.py        # http://localhost:5173 (na localhostu je service worker vypnutý)
-python tools/make_icons.py       # přegeneruje ikony
+python tools/make_icons.py       # přegeneruje ikony (Pillow + písmo Bahnschrift)
 ```
 
 Po každé změně souborů, kterou nasazuješ, zvyš `VERSION` v `sw.js`. Jinak iPhone dál servíruje starou verzi z cache.
