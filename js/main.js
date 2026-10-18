@@ -6,6 +6,8 @@ import { today, addDays, dm, dowShort } from './lib/dates.js';
 import { renderToday } from './views/today.js';
 import { renderWeek } from './views/week.js';
 import { renderSettings } from './views/settings.js';
+import { renderPerformance } from './views/performance.js';
+import { renderCharts } from './views/charts.js';
 import { tap } from './ui/haptics.js';
 
 const TABS = [
@@ -47,12 +49,10 @@ function view() {
       });
     case 'nastaveni':
       return renderSettings();
-    default:
-      return h('div.view.soon',
-        h('div.soon-num', ui.tab === 'vykon' ? 'PB' : 'ACWR'),
-        h('p', ui.tab === 'vykon'
-          ? 'Výkon – PB, závody s body podle tabulek WA, testy a tělesné míry. Přijde ve fázi 2.'
-          : 'Grafy – sRPE/ACWR, HRV a tep, spánek, heatmapa bolesti, progrese. Přijde ve fázi 2.'));
+    case 'vykon':
+      return renderPerformance(render);
+    case 'grafy':
+      return renderCharts(render);
   }
 }
 

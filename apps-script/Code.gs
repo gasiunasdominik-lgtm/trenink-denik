@@ -4,8 +4,11 @@
  *
  * GET  ?action=ping&token=…              → { ok, name }
  * GET  ?action=pull&token=…&since=ISO    → { ok, now, sheets: { Jednotky: [...], ... } }  (řádky s ts > since)
+ * GET  ?action=version&token=…           → { ok, version }
  * POST {"action":"push","token":…,"rows":[{sheet,row}]}  → upsert podle klíče, neznámé sloupce se doplní
  */
+
+const VERSION = 2; // zvyš při změně; appka upozorní, když běží starší nasazení
 
 const SCHEMA = {
   Jednotky:     { key: 'id',         cols: ['id', 'datum', 'poradi', 'typ', 'nazev', 'detail', 'plan_min', 'min', 'rpe', 'srpe', 'poznamka', 'sprint_m', 'skoky', 'hody', 'prekazky', 'reg_min', 'zo', 'zn', 'zav', 'skip', 'smazano', 'ts'] },
@@ -14,13 +17,13 @@ const SCHEMA = {
   Reporty:      { key: 'id',         cols: ['id', 'tyden', 'datum', 'titulek', 'text', 'ts'] },
   Nastaveni:    { key: 'klic',       cols: ['klic', 'hodnota', 'ts'] },
   // fáze 2 – listy se založí už teď
-  Zavody:       { key: 'id',         cols: ['id', 'datum', 'zavod', 'misto', 'disciplina', 'vykon', 'vitr', 'poradi', 'body', 'poznamka', 'ts'] },
-  Testy:        { key: 'id',         cols: ['id', 'datum', 'test', 'kategorie', 'hodnota', 'jednotka', 'poznamka', 'ts'] },
+  Zavody:       { key: 'id',         cols: ['id', 'datum', 'zavod', 'misto', 'disciplina', 'vykon', 'vykon_txt', 'vitr', 'rucne', 'poradi', 'body', 'poznamka', 'smazano', 'ts'] },
+  Testy:        { key: 'id',         cols: ['id', 'datum', 'test', 'kategorie', 'hodnota', 'jednotka', 'poznamka', 'smazano', 'ts'] },
   PB_Plany:     { key: 'disciplina', cols: ['disciplina', 'pb', 'pb_datum', 'plan_letos', 'vykon_letos', 'plan_pristi', 'rekord_cr', 'rekord_sr', 'ts'] },
   Telesne_miry: { key: 'datum',      cols: ['datum', 'vaha', 'vyska', 'tuk_pct', 'rhr', 'ts'] },
 };
 
-const PULL_SHEETS = ['Jednotky', 'Wellness', 'Tydny', 'Reporty', 'Nastaveni'];
+const PULL_SHEETS = ['Jednotky', 'Wellness', 'Tydny', 'Reporty', 'Nastaveni', 'Zavody', 'Testy', 'PB_Plany', 'Telesne_miry'];
 
 /** Spusť jednou ručně: založí listy a vygeneruje token (najdeš ho v protokolu provádění). */
 function setup() {
@@ -39,7 +42,8 @@ function doGet(e) {
   return handle_(() => {
     auth_(e.parameter.token);
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    if (e.parameter.action === 'ping') return { name: ss.getName() };
+    if (e.parameter.action === 'ping') return { name: ss.getName(), version: VERSION };
+    if (e.parameter.action === 'version') return { version: VERSION };
     if (e.parameter.action === 'pull') {
       const since = e.parameter.since || '';
       const now = new Date().toISOString();
@@ -49,7 +53,7 @@ function doGet(e) {
         // Reporty píše Claude ručně a nemusí vyplnit ts – posílají se vždy celé (je jich málo)
         sheets[name] = name === 'Reporty' ? rows : rows.filter(r => String(r.ts || '') > since);
       });
-      return { now, sheets };
+      return { now, sheets, version: VERSION };
     }
     throw new Error('Neznámá akce');
   });

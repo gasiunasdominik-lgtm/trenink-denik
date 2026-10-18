@@ -1,13 +1,17 @@
 // Tenký promise wrapper nad IndexedDB.
 
 const DB_NAME = 'trenink-denik';
-const VERSION = 1;
+const VERSION = 2;
 
 export const STORES = {
   units:    { keyPath: 'id' },
   wellness: { keyPath: 'datum' },
   weeks:    { keyPath: 'tyden' },
   reports:  { keyPath: 'id' },
+  zavody:   { keyPath: 'id' },
+  testy:    { keyPath: 'id' },
+  pb:       { keyPath: 'disciplina' },
+  miry:     { keyPath: 'datum' },
   kv:       { keyPath: 'k' },
   outbox:   { keyPath: 'seq', autoIncrement: true },
 };

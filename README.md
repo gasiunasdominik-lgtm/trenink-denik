@@ -36,7 +36,14 @@ tools/     devserver.py · make_icons.py   lokální server bez cache, generáto
 5. Klikni na **Nasadit** a zkopíruj **URL webové aplikace** (končí na `/exec`).
 6. V appce otevři **Nastavení (ozubené kolečko) → Google Sheet**, vlož URL a token a dej **Otestovat**. Do třetího pole můžeš vložit odkaz na samotnou tabulku.
 
-Když později změníš `Code.gs`: **Nasadit → Spravovat nasazení → tužka → Verze: Nová verze → Nasadit**. URL zůstane stejná.
+### Aktualizace skriptu
+
+Když se `apps-script/Code.gs` změní (fáze 2 = verze 2):
+
+1. **Google Sheets** (tvoje tabulka v prohlížeči na počítači) → **Rozšíření → Apps Script**.
+2. **Editor Apps Scriptu** → soubor `Kód.gs` → označ všechno (Ctrl+A) → vlož nový obsah `apps-script/Code.gs` z GitHubu → Ctrl+S.
+3. **Editor Apps Scriptu** → vpravo nahoře **Nasadit → Spravovat nasazení** → u stávajícího nasazení **tužka (Upravit)** → *Verze:* **Nová verze** → **Nasadit**.
+4. URL ani token se nemění, v appce nic nepřepisuješ. **Appka na iPhonu → ozubené kolečko → Google Sheet → Otestovat** pak ukáže `Spojení OK`.
 
 ## 2. Hosting na GitHub Pages
 
@@ -67,6 +74,10 @@ Po každé změně souborů, kterou nasazuješ, zvyš `VERSION` v `sw.js`. Jinak
 | Tydny | tyden (`2026-W42`) | zhodnoceni, ts |
 | Reporty | id / tyden | datum, titulek, text, ts – plní Claude (fáze 3) |
 | Nastaveni | klic | hodnota (JSON), ts |
+| Zavody | id | datum, zavod, misto, disciplina, vykon (s nebo m), vykon_txt, vitr, rucne, poradi, body (WA), poznamka, ts |
+| Testy | id | datum, test, kategorie, hodnota, jednotka, poznamka, ts |
+| PB_Plany | disciplina | pb, pb_datum, plan_letos, vykon_letos, plan_pristi, rekord_cr, rekord_sr, ts |
+| Telesne_miry | datum | vaha, vyska, tuk_pct, rhr, ts |
 
 Konflikty řeší pravidlo „novější `ts` vyhrává“. Všechny buňky jsou textové, aby Sheets nepřeváděl data a časy na vlastní typy.
 

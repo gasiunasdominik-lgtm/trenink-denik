@@ -15,7 +15,8 @@ const encode = row => Object.fromEntries(Object.entries(row).map(([k, v]) =>
   [k, JSON_FIELDS.includes(k) && v && typeof v === 'object' ? JSON.stringify(v) : v]));
 
 // Sheet má vše jako text – čísla vracíme na čísla (kromě klíčů a textových polí).
-const TEXT_FIELDS = ['id', 'datum', 'tyden', 'klic', 'cas', 'ts', 'nazev', 'detail', 'poznamka', 'text', 'titulek', 'zhodnoceni', 'typ'];
+const TEXT_FIELDS = ['id', 'datum', 'tyden', 'klic', 'cas', 'ts', 'nazev', 'detail', 'poznamka', 'text', 'titulek', 'zhodnoceni', 'typ',
+  'zavod', 'misto', 'disciplina', 'vykon_txt', 'test', 'kategorie', 'jednotka', 'pb_datum'];
 const decode = row => Object.fromEntries(Object.entries(row).map(([k, v]) => {
   if (JSON_FIELDS.includes(k) && typeof v === 'string' && v.startsWith('{')) {
     try { return [k, JSON.parse(v)]; } catch { /* necháme text */ }
@@ -56,13 +57,15 @@ async function push(cfg) {
 }
 
 async function pull(cfg) {
-  const { lastPull } = store.getDevice();
-  const data = await call(cfg, 'GET', { action: 'pull', since: lastPull || '' });
+  const { lastPull, serverVersion } = store.getDevice();
+  let data = await call(cfg, 'GET', { action: 'pull', since: lastPull || '' });
+  // novější skript posílá i další listy → jednou stáhnout všechno od začátku
+  if (lastPull && (data.version || 1) > (serverVersion || 1)) data = await call(cfg, 'GET', { action: 'pull', since: '' });
   const decoded = Object.fromEntries(Object.entries(data.sheets).map(([s, rows]) => [s, rows.map(decode)]));
   // řádky reportu bez id/ts (zapsané Claudem) – klíčem je týden, ts ať nepřebije nic novějšího
   (decoded.Reporty || []).forEach(r => { r.id ??= r.tyden || r.datum; r.ts ??= r.datum || ''; });
   await store.applyRemote(decoded);
-  await store.saveDevice({ lastPull: data.now });
+  await store.saveDevice({ lastPull: data.now, serverVersion: data.version || 1 });
 }
 
 let running = null;

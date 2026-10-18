@@ -9,9 +9,13 @@ export const SHEETS = {
   wellness: { sheet: 'Wellness', key: 'datum' },
   weeks:    { sheet: 'Tydny',    key: 'tyden' },
   reports:  { sheet: 'Reporty',  key: 'id' },
+  zavody:   { sheet: 'Zavody',   key: 'id' },
+  testy:    { sheet: 'Testy',    key: 'id' },
+  pb:       { sheet: 'PB_Plany', key: 'disciplina' },
+  miry:     { sheet: 'Telesne_miry', key: 'datum' },
 };
 
-const mem = { units: new Map(), wellness: new Map(), weeks: new Map(), reports: new Map() };
+const mem = Object.fromEntries(Object.keys(SHEETS).map(k => [k, new Map()]));
 let settings = structuredClone(DEFAULT_SETTINGS);
 let device = { ...DEFAULT_DEVICE };
 let settingsTs = '';
@@ -63,6 +67,12 @@ export const saveUnit = u => write('units', u);
 export const deleteUnit = id => { const u = mem.units.get(id); return u && write('units', { ...u, smazano: 1 }); };
 export const saveWellness = w => write('wellness', w);
 export const saveWeek = w => write('weeks', w);
+
+// obecné kolekce (výkon): zavody, testy, pb, miry
+export const rows = coll => [...mem[coll].values()].filter(r => !r.smazano);
+export const row = (coll, key) => mem[coll].get(key);
+export const saveRow = (coll, r) => write(coll, r);
+export const deleteRow = (coll, key) => { const r = mem[coll].get(key); return r && write(coll, { ...r, smazano: 1 }); };
 
 export async function saveSettings(patch) {
   settings = mergeSettings({ ...settings, ...patch });
@@ -125,5 +135,9 @@ export function exportAll() {
     Wellness: wellnessAll(),
     Tydny: [...mem.weeks.values()],
     Reporty: reports(),
+    Zavody: rows('zavody'),
+    Testy: rows('testy'),
+    PB_Plany: rows('pb'),
+    Telesne_miry: rows('miry'),
   };
 }
