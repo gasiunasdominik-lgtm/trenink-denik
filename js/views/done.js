@@ -7,7 +7,7 @@ import { success, tap } from '../ui/haptics.js';
 import { toast } from '../ui/toast.js';
 import * as store from '../data/store.js';
 import { TYPES } from '../config.js';
-import { today, dm } from '../lib/dates.js';
+import { today, dm, dowShort } from '../lib/dates.js';
 
 const VOLUME = [
   ['sprint_m', 'Sprint', 'm'],
@@ -160,7 +160,8 @@ export function openDone(row, datum, onSaved = () => {}) {
     sheet.close();
     await store.saveUnit(u);
     success();
-    if (wasDone) toast('Změny uloženy');
+    if (u.datum !== datum) toast(`Uloženo na ${dowShort(u.datum)} ${dm(u.datum)}`);
+    else if (wasDone) toast('Změny uloženy');
   }
 
   async function skip() {
