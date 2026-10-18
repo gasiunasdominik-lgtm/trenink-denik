@@ -5,7 +5,8 @@ import * as store from '../data/store.js';
 import { dayRows, bgFor } from '../calc/plan.js';
 import { readiness, painMax } from '../calc/readiness.js';
 import { loadMetrics, acwrZone } from '../calc/load.js';
-import { today, isoWeek, dayOfYear, dowShort, dm, hm } from '../lib/dates.js';
+import { today, isoWeek, dayOfYear, dowShort, dm, hm, addDays } from '../lib/dates.js';
+import { TYPES } from '../config.js';
 import { openCheckin } from './checkin.js';
 import { openDone } from './done.js';
 
@@ -17,7 +18,8 @@ export function stamp(time, animate) {
   return h('span.stamp' + (animate ? '.new' : ''), { style: { '--r': `${-11 + ((time || '').charCodeAt(4) % 7)}deg` } }, 'Hotovo');
 }
 
-export function renderToday(datum = today()) {
+/** @param opts.onDay(datum) přepnutí dne (přepínač ‹ ›) */
+export function renderToday(datum = today(), { onDay } = {}) {
   const s = store.getSettings();
   const w = store.wellness(datum);
   const r = readiness(store.wellness, datum, s.thresholds);
@@ -49,6 +51,14 @@ export function renderToday(datum = today()) {
     r ? h('div.paint-l', 'Readiness') : null,
   );
 
+  // ---------- přepínač dne (zápis a úpravy zpětně) ----------
+  const isToday = datum === today();
+  const dayswitch = onDay ? h('nav.dayswitch', { 'aria-label': 'Přepnout den' },
+    h('button', { type: 'button', 'aria-label': 'Předchozí den', on: { click: () => onDay(addDays(datum, -1)) } }, '‹'),
+    h('span', isToday ? `Dnes · ${dowShort(datum)} ${dm(datum)}` : `${dowShort(datum)} ${dm(datum)}`),
+    h('button', { type: 'button', 'aria-label': 'Další den', disabled: isToday, on: { click: () => onDay(addDays(datum, 1)) } }, '›'),
+  ) : null;
+
   // ---------- dráhy ----------
   const lanes = h('div.lanes',
     rows.map((row, i) => {
@@ -57,8 +67,8 @@ export function renderToday(datum = today()) {
       },
         h('span.n', i + 1),
         h('span.t', row.nazev, h('small', row.done
-          ? [`RPE ${row.rpe}`, `sRPE ${row.srpe ?? row.min * row.rpe}`, row.poznamka].filter(Boolean).join(' · ')
-          : row.skipped ? 'vynecháno' : row.detail || '')),
+          ? [`RPE ${row.rpe}`, row.obsah || row.poznamka].filter(Boolean).join(' · ')
+          : row.skipped ? 'vynecháno – ťukni pro zápis' : row.detail || '')),
         h('span.v', row.done ? row.min : row.min ?? row.plan?.min ?? '–', h('i', '′')),
         row.done ? stamp(row.ts, justStamped === row.id) : null,
       );
@@ -88,13 +98,16 @@ export function renderToday(datum = today()) {
     : null;
 
   // ---------- CTA v dosahu palce ----------
-  const nextRow = rows.find(x => !x.done && !x.skipped);
-  const cta = !w
+  // hlavní trénink před mobilitou; ranní check-in nabídne jen dnes dopoledne (jinak je v rámečku na tartanu)
+  const open = rows.filter(x => !x.done && !x.skipped);
+  const nextRow = open.find(x => !TYPES[x.typ]?.reg) ?? open[0];
+  const checkinFirst = !w && isToday && new Date().getHours() < 12;
+  const cta = checkinFirst
     ? h('button.cta', { on: { click: () => openCheckin(datum, refresh) } }, 'Ranní check-in')
     : nextRow
       ? h('button.cta', { on: { click: () => openDone(nextRow, datum, id => { justStamped = id; }) } },
           h('span', 'Hotovo'), h('small', nextRow.nazev))
       : h('button.cta.cta-quiet', { on: { click: () => openDone(null, datum, id => { justStamped = id; }) } }, 'Den splněn · + jednotka');
 
-  return h('div.view.today', track, connect, banner, lanes, bar, h('div.cta-wrap', cta));
+  return h('div.view.today', track, connect, banner, dayswitch, lanes, bar, h('div.cta-wrap', cta));
 }

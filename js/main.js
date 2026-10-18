@@ -36,7 +36,7 @@ function go(tab) {
 function view() {
   switch (ui.tab) {
     case 'dnes': {
-      const v = renderToday(ui.day);
+      const v = renderToday(ui.day, { onDay: d => { ui.day = d; render(); } });
       if (ui.day !== today()) {
         v.prepend(h('button.back-today', { on: { click: () => { ui.day = today(); render(); } } },
           `${dowShort(ui.day)} ${dm(ui.day)} · zpět na dnes`));

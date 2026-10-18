@@ -26,11 +26,25 @@ export function stepper({ value = 0, step = 5, min = 0, max = 999, unit = '', de
   const render = () => { out.textContent = format ? format(v) : v.toLocaleString('cs-CZ', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }); };
   const bump = d => { v = Math.min(max, Math.max(min, +(v + d).toFixed(2))); render(); tap(); onChange(v); };
   render();
-  return h('div.stepper',
+  const el = h('div.stepper',
     h('button.step-btn', { type: 'button', 'aria-label': 'Méně', on: { click: () => bump(-step) } }, '−'),
     h('div.step-mid', out, unit ? h('span.step-unit', unit) : null),
     h('button.step-btn', { type: 'button', 'aria-label': 'Více', on: { click: () => bump(step) } }, '+'),
   );
+  /** nastavení zvenku (rychlé volby) */
+  el.setValue = x => { v = x; render(); onChange(v); };
+  return el;
+}
+
+/** Řada rychlých voleb („čipů“). onPick(value). */
+export function chips(items, onPick, { active } = {}) {
+  return h('div.chips.quick', items.map(({ label, value }) =>
+    h('button.qchip', { type: 'button', 'aria-pressed': String(active != null && value === active), on: { click: e => {
+      e.currentTarget.parentElement.querySelectorAll('.qchip').forEach(b => b.setAttribute('aria-pressed', 'false'));
+      e.currentTarget.setAttribute('aria-pressed', 'true');
+      tap();
+      onPick(value);
+    } } }, label)));
 }
 
 /** Číselné pole s numerickou klávesnicí. */

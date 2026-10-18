@@ -37,7 +37,7 @@ tools/     devserver.py · make_icons.py   lokální server bez cache, generáto
 
 ### Aktualizace skriptu
 
-Když se `apps-script/Code.gs` změní (aktuálně verze 8):
+Když se `apps-script/Code.gs` změní (aktuálně verze 9):
 
 1. **Google Sheets** (tvoje tabulka v prohlížeči na počítači) → **Rozšíření → Apps Script**.
 2. **Editor Apps Scriptu** → soubor `Kód.gs` → označ všechno (Ctrl+A) → vlož nový obsah `apps-script/Code.gs` z GitHubu → Ctrl+S.
@@ -51,10 +51,10 @@ Když se `apps-script/Code.gs` změní (aktuálně verze 8):
 3. V repozitáři otevři **Settings → Pages → Build and deployment**. Zvol *Source:* **Deploy from a branch**, *Branch:* **main** a **/ (root)**, pak **Save**.
 4. Asi za minutu poběží appka na `https://gasiunasdominik-lgtm.github.io/trenink-denik/`.
 
-## Fáze 3: nedělní report a iOS zkratky
+## Fáze 3: nedělní report a ranní zkratka
 
 - Nedělní report píše samostatná Cowork úloha do listu **Reporty**; appka ho ukáže v **TÝDNU → Claude · nedělní analýza** (formát: `## nadpis`, `- odrážka`, `**tučně**`).
-- [docs/ios-zkratky.md](docs/ios-zkratky.md): ranní import spánku, času v posteli a klidového tepu z Apple Health (Garmin → Zdraví) a „Hej Siri, zapiš trénink“. Potřebuje Apps Script verze 8.
+- [docs/ios-zkratky.md](docs/ios-zkratky.md): ranní import spánku, času v posteli a klidového tepu z Apple Health (Garmin → Zdraví). Potřebuje Apps Script verze 8+.
 
 ## 3. Instalace na iPhone
 
@@ -73,7 +73,7 @@ Po každé změně souborů, kterou nasazuješ, zvyš `VERSION` v `sw.js`. Jinak
 
 | List | Klíč | Sloupce |
 |---|---|---|
-| Jednotky | id | datum, poradi, typ, nazev, detail, plan_min, min, rpe, srpe, poznamka, sprint_m, skoky, hody, prekazky, reg_min, zo, zn, zav, skip, smazano, ts |
+| Jednotky | id | datum, poradi, typ, nazev, detail, plan_min, min, rpe, srpe, obsah, poznamka, sprint_m, skoky, hody, prekazky, reg_min, zo, zn, zav, skip, smazano, ts |
 | Wellness | datum | cas, hrv, rhr, spanek_h, v_posteli_h, spanek_zdroj (zdravi / rucne), spanek_q, unava, svaly, nalada (1–5, 5 = nejlepší), bolest (JSON partie → 1–3), ts |
 | Tydny | tyden (`2026-W42`) | zhodnoceni, ts |
 | Reporty | id / tyden | datum, titulek, text, ts – plní Claude (fáze 3) |

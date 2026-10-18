@@ -6,7 +6,6 @@
  * GET  ?action=pull&token=…&since=ISO    → { ok, now, sheets: { Jednotky: [...], ... } }  (řádky s ts > since)
  * GET  ?action=version&token=…           → { ok, version }
  * POST {"action":"push","token":…,"rows":[{sheet,row}]}  → upsert podle klíče, neznámé sloupce se doplní
- * POST {"action":"log","token":…,"nazev":"tyč technika","min":90,"rpe":7}            → jednotka navíc (iOS zkratka / Siri)
  * POST {"action":"wellness","token":…,"rhr":48,"zacatek":"ISO
 …","konec":"ISO
 …","faze":"In Bed
@@ -16,10 +15,10 @@ Core…","zdroj":"Garmin Connect
  *      doplní jen prázdná pole dnešního check-inu (ruční zápis nepřepíše)
  */
 
-const VERSION = 8; // zvyš při změně; appka upozorní, když běží starší nasazení
+const VERSION = 9; // zvyš při změně; appka upozorní, když běží starší nasazení
 
 const SCHEMA = {
-  Jednotky:     { key: 'id',         cols: ['id', 'datum', 'poradi', 'typ', 'nazev', 'detail', 'plan_min', 'min', 'rpe', 'srpe', 'poznamka', 'sprint_m', 'skoky', 'hody', 'prekazky', 'reg_min', 'zo', 'zn', 'zav', 'skip', 'smazano', 'ts'] },
+  Jednotky:     { key: 'id',         cols: ['id', 'datum', 'poradi', 'typ', 'nazev', 'detail', 'plan_min', 'min', 'rpe', 'srpe', 'obsah', 'poznamka', 'sprint_m', 'skoky', 'hody', 'prekazky', 'reg_min', 'zo', 'zn', 'zav', 'skip', 'smazano', 'ts'] },
   Wellness:     { key: 'datum',      cols: ['datum', 'cas', 'hrv', 'rhr', 'spanek_h', 'v_posteli_h', 'spanek_zdroj', 'spanek_q', 'unava', 'svaly', 'nalada', 'bolest', 'ts'] },
   Tydny:        { key: 'tyden',      cols: ['tyden', 'zhodnoceni', 'ts'] },
   Reporty:      { key: 'id',         cols: ['id', 'tyden', 'datum', 'titulek', 'text', 'ts'] },
@@ -73,7 +72,6 @@ function doPost(e) {
   return handle_(() => {
     const body = JSON.parse(e.postData.contents);
     auth_(body.token);
-    if (body.action === 'log') return withLock_(() => logUnit_(body));
     if (body.action === 'wellness') return withLock_(() => importWellness_(body));
     if (body.action !== 'push') throw new Error('Neznámá akce');
     const lock = LockService.getScriptLock();
@@ -93,15 +91,7 @@ function doPost(e) {
   });
 }
 
-// ---------- iOS zkratky ----------
-
-const TYPE_WORDS_ = [
-  ['regenerace', /regener|protah|mobil|sauna|mas[aá]ž|v[aá]lec/i],
-  ['prekazky', /p[rř]ek[aá]ž/i], ['tyc', /ty[cč]/i], ['vyska', /v[yý][sš]k/i], ['dalka', /d[aá]lk/i],
-  ['ostep', /o[sš]t[eě]p/i], ['vrhy', /koul|disk|vrh/i], ['rychlost', /rychl|sprint|letm/i],
-  ['tempo', /tempo|vytrval|[uú]sek/i], ['multi', /multi|v[ií]ceboj|desetiboj/i], ['zavod', /z[aá]vod|m[ií]tink/i],
-  ['sila', /s[ií]l|posil|gym|činky|cinky/i],
-];
+// ---------- iOS zkratka „Ranní data ze Zdraví“ ----------
 
 function today_() { return Utilities.formatDate(new Date(), 'Europe/Prague', 'yyyy-MM-dd'); }
 
@@ -194,24 +184,6 @@ function withLock_(fn) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try { return fn(); } finally { lock.releaseLock(); }
-}
-
-function logUnit_(b) {
-  const nazev = String(b.nazev || '').trim();
-  if (!nazev) throw new Error('Chybí název tréninku');
-  const min = num_(b.min), rpe = num_(b.rpe);
-  const hit = TYPE_WORDS_.find(([, re]) => re.test(nazev));
-  const datum = today_();
-  const row = {
-    id: datum + '-s' + Date.now().toString(36), datum, poradi: 200,
-    typ: b.typ || (hit ? hit[0] : 'sila'),
-    nazev: nazev.charAt(0).toUpperCase() + nazev.slice(1),
-    min, rpe, srpe: min !== null && rpe !== null ? min * rpe : null,
-    poznamka: b.poznamka ? String(b.poznamka) : 'Siri',
-    ts: new Date().toISOString(),
-  };
-  upsert_(sheet_(SpreadsheetApp.getActiveSpreadsheet(), 'Jednotky'), 'id', [row]);
-  return { text: 'Zapsáno: ' + row.nazev + (min !== null ? ', ' + min + ' min' : '') + (rpe !== null ? ', RPE ' + rpe : '') };
 }
 
 // ---------- spánek z intervalů (zkratka posílá začátek, konec, fázi a zdroj každého vzorku) ----------
