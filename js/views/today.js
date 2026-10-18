@@ -80,6 +80,13 @@ export function renderToday(datum = today()) {
     ? h('div.alert', h('b', 'Overreaching flag'), ` HRV ↓ ≥ ${s.thresholds.hrvDropPct} %, tep ↑, horší spánek ${s.thresholds.days}+ dny. Zvaž lehký den a řekni trenérovi.`)
     : null;
 
+  const dev = store.getDevice();
+  const connect = !(dev.apiUrl && dev.token)
+    ? h('a.connect', { href: '#nastaveni' },
+        h('b', 'Propojit Google Sheet'),
+        h('small', 'Zápisy jsou zatím jen v telefonu. Nastavení → Google Sheet → URL a token.'))
+    : null;
+
   // ---------- CTA v dosahu palce ----------
   const nextRow = rows.find(x => !x.done && !x.skipped);
   const cta = !w
@@ -89,5 +96,5 @@ export function renderToday(datum = today()) {
           h('span', 'Hotovo'), h('small', nextRow.nazev))
       : h('button.cta.cta-quiet', { on: { click: () => openDone(null, datum, id => { justStamped = id; }) } }, 'Den splněn · + jednotka');
 
-  return h('div.view.today', track, banner, lanes, bar, h('div.cta-wrap', cta));
+  return h('div.view.today', track, connect, banner, lanes, bar, h('div.cta-wrap', cta));
 }

@@ -65,6 +65,8 @@ function render() {
   mount(main, current);
   main.scrollTop = keepScroll;
   document.querySelectorAll('.tabbar [data-tab]').forEach(b => b.setAttribute('aria-current', String(b.dataset.tab === ui.tab)));
+  const dev = store.getDevice();
+  $('.tabbar .gear').classList.toggle('needs-setup', !(dev.apiUrl && dev.token));
 }
 
 function tabbar() {
@@ -79,7 +81,10 @@ async function boot() {
   mount($('#app'), h('main#main'), tabbar());
   addEventListener('hashchange', route);
   // překreslit při změně dat; nastavení si obsluhuje změny samo
-  store.subscribe(() => { if (ui.tab !== 'nastaveni') render(); });
+  store.subscribe(() => {
+    if (ui.tab !== 'nastaveni') render();
+    else { const dev = store.getDevice(); $('.tabbar .gear').classList.toggle('needs-setup', !(dev.apiUrl && dev.token)); }
+  });
   // o půlnoci / po návratu do appky přepnout „dnes“
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && ui.tab === 'dnes' && ui.day < today()) { ui.day = today(); render(); }

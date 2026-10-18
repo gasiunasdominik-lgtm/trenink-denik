@@ -134,7 +134,18 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .tabbar button { font-weight: 800; font-size: 15px; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); display: flex; align-items: center; justify-content: center; font-variation-settings: "wdth" 70; position: relative; }
 .tabbar button[aria-current="true"] { color: var(--ink); }
 .tabbar button[aria-current="true"]::before { content: ""; position: absolute; top: -1px; left: 24%; right: 24%; height: 3px; background: var(--tartan); }
+.tabbar .gear { color: var(--ink); }
+.tabbar .gear svg { width: 26px; height: 26px; }
+.tabbar .gear.needs-setup::after { content: ""; position: absolute; top: 14px; right: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--tartan-l); box-shadow: 0 0 0 2px var(--bg); }
 .tabbar .gear span { display: grid; }
+
+.connect { display: block; margin: 14px 16px 0; padding: 14px 16px; border: 2px solid var(--tartan-l); color: var(--ink); text-decoration: none; }
+.connect b { display: block; font-weight: 900; font-size: 22px; text-transform: uppercase; font-variation-settings: "wdth" 70; }
+.connect b::after { content: " →"; color: var(--tartan-l); }
+.connect small { display: block; margin-top: 4px; color: var(--dim); font-size: 13px; line-height: 1.35; }
+.connect:active { background: #1a1311; }
+.lbl { display: grid; gap: 6px; }
+.lbl > span { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); font-weight: 700; }
 
 /* ---------- bottom sheet ---------- */
 .scrim { position: fixed; inset: 0; z-index: 20; background: rgba(0, 0, 0, .6); opacity: 0; transition: opacity .25s; }

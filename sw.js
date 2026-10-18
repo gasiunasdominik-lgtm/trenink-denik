@@ -1,5 +1,5 @@
 // Service worker: appka funguje offline. Při změně souborů zvyš VERSION.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/main.js', 'js/config.js', 'js/lib/dates.js',
@@ -13,7 +13,10 @@ const SHELL_CACHE = `shell-${VERSION}`;
 const FONT_CACHE = 'fonts';
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(SHELL_CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' – obejít HTTP cache GitHub Pages, jinak by nová verze mohla uložit staré soubory
+  e.waitUntil(caches.open(SHELL_CACHE)
+    .then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' }))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {

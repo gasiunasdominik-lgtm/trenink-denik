@@ -111,8 +111,8 @@ export function renderSettings() {
 
   const view = h('div.view.settings',
     h('header.page-head', h('h1', 'Nastavení')),
-    sect('Google Sheet', h('p.muted', 'URL a token Apps Scriptu (návod v README). Ukládá se jen v tomhle zařízení.'),
-      url, token, h('div.row', testBtn, syncBtn), statusEl, sheetUrl,
+    sect('Google Sheet', h('p.muted', 'Vlož URL webové aplikace Apps Scriptu (končí na /exec) a token, pak Otestovat. Ukládá se jen v tomhle zařízení.'),
+      labeled('URL Apps Scriptu', url), labeled('Token', token), h('div.row', testBtn, syncBtn), statusEl, labeled('Odkaz na Sheet (volitelné)', sheetUrl),
       s.sheetUrl ? h('a.btn-link', { href: s.sheetUrl, target: '_blank', rel: 'noopener' }, 'Otevřít Sheet ↗') : null),
     sect('Check-in pole', fields),
     sect('Týdenní šablona', tplBox),
@@ -131,6 +131,10 @@ export function renderSettings() {
   );
   view.cleanup = () => { off(); offStore(); };
   return view;
+}
+
+function labeled(label, control) {
+  return h('label.lbl', h('span', label), control);
 }
 
 function sect(title, ...kids) {
