@@ -18,7 +18,8 @@ js/calc/   load.js · readiness.js · plan.js · wa.js · perf.js   zátěž a O
 js/ui/     dom · inputs · sheet · haptics · track-bg · chart · celebrate   UI stavebnice, 11 tartanových pozadí, SVG grafy, PB oslava
 js/views/  today · checkin · done · week · performance · charts · settings
 apps-script/Code.gs                       backend nad Sheetem
-tools/     devserver.py · make_icons.py   lokální server bez cache, generátor ikon
+tools/     devserver.py · make_icons.py · make_icon_variants.py   lokální server bez cache, generátor ikon a variant A–F
+icons.html                                náhled variant ikony (icons/varianty/)
 ```
 
 ## 1. Google Sheet + Apps Script (jednorázově, ~5 min)
