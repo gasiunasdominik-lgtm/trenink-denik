@@ -1,6 +1,7 @@
 // Synchronizace s Google Sheetem přes Apps Script web app.
 // Push: outbox → doPost. Pull: doGet se změnami od posledního pullu. Konflikty: novější ts vyhrává.
 import * as store from './store.js';
+import { normalizeRow } from './normalize.js';
 
 const JSON_FIELDS = ['bolest', 'hodnota'];
 const BATCH = 40;
@@ -62,7 +63,7 @@ async function pull(cfg) {
   let data = await call(cfg, 'GET', { action: 'pull', since: lastPull || '' });
   // novější skript posílá i další listy → jednou stáhnout všechno od začátku
   if (lastPull && (data.version || 1) > (serverVersion || 1)) data = await call(cfg, 'GET', { action: 'pull', since: '' });
-  const decoded = Object.fromEntries(Object.entries(data.sheets).map(([s, rows]) => [s, rows.map(decode)]));
+  const decoded = Object.fromEntries(Object.entries(data.sheets).map(([s, rows]) => [s, rows.map(r => normalizeRow(s, decode(r)))]));
   // řádky reportu bez id/ts (zapsané Claudem) – klíčem je týden, ts ať nepřebije nic novějšího
   (decoded.Reporty || []).forEach(r => { r.id ??= r.tyden || r.datum; r.ts ??= r.datum || ''; });
   await store.applyRemote(decoded);

@@ -39,7 +39,7 @@ export function renderSettings() {
     try {
       const r = await sync.test(url.value.trim(), token.value.trim());
       const v = r.version || 1;
-      statusEl.textContent = `Spojení OK · Sheet: ${r.name} · skript v${v}${v < 7 ? ' – nasaď novou verzi (README → Aktualizace skriptu)' : ''}`;
+      statusEl.textContent = `Spojení OK · Sheet: ${r.name} · skript v${v}${v < 8 ? ' – nasaď novou verzi (README → Aktualizace skriptu)' : ''}`;
       statusEl.dataset.status = 'idle';
     } catch (e) {
       statusEl.textContent = `Nepovedlo se: ${e.message}`;
@@ -115,6 +115,9 @@ export function renderSettings() {
     sect('Google Sheet', h('p.muted', 'Vlož URL webové aplikace Apps Scriptu (končí na /exec) a token, pak Otestovat. Ukládá se jen v tomhle zařízení.'),
       labeled('URL Apps Scriptu', url), labeled('Token', token), h('div.row', testBtn, syncBtn), statusEl, labeled('Odkaz na Sheet (volitelné)', sheetUrl),
       s.sheetUrl ? h('a.btn-link', { href: s.sheetUrl, target: '_blank', rel: 'noopener' }, 'Otevřít Sheet ↗') : null),
+    sect('Moduly', h('div.toggles',
+      toggleRow('VÝKON (PB, závody, testy, tělo)', s.modules.vykon !== false, v => { s.modules.vykon = v; save({ modules: s.modules }); }),
+      toggleRow('GRAFY', s.modules.grafy !== false, v => { s.modules.grafy = v; save({ modules: s.modules }); }))),
     sect('Check-in pole', fields),
     sect('Týdenní šablona', tplBox),
     sect('Partie (bolest)', partsBox),
@@ -124,10 +127,12 @@ export function renderSettings() {
       thr('sleepDropH', 'Spánek pod baseline', 'h'), thr('days', 'Dní po sobě', 'dny'),
       thr('green', 'Zelená od', 'b.'), thr('amber', 'Žlutá od', 'b.')),
     sect('Pozadí DNES', bgSel),
-    sect('Export', h('div.row',
-      h('button.btn-ghost', { on: { click: exportJson } }, 'JSON'),
-      h('button.btn-ghost', { on: { click: () => exportCsv('Jednotky') } }, 'CSV jednotky'),
-      h('button.btn-ghost', { on: { click: () => exportCsv('Wellness') } }, 'CSV wellness'))),
+    sect('Export',
+      h('p.muted', 'Záloha všeho, co je v telefonu. CSV se středníkem otevře Excel i Google Sheets.'),
+      h('div.row',
+        h('button.btn-ghost', { on: { click: exportJson } }, 'Vše · JSON'),
+        ...[['Jednotky', 'Jednotky'], ['Wellness', 'Wellness'], ['Zavody', 'Závody'], ['Testy', 'Testy'], ['PB_Plany', 'PB a plány'], ['Telesne_miry', 'Tělesné míry'], ['Tydny', 'Týdny']]
+          .map(([sheet, label]) => h('button.btn-ghost', { on: { click: () => exportCsv(sheet) } }, `CSV ${label}`)))),
     h('p.muted.foot', `Trénink deník · fáze 1 · ${fmt(store.units().length)} jednotek, ${fmt(store.wellnessAll().length)} check-inů`),
   );
   view.cleanup = () => { off(); offStore(); };

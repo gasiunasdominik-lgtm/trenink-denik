@@ -22,7 +22,8 @@ let current = null;
 
 function route() {
   const id = location.hash.slice(1) || 'dnes';
-  ui.tab = [...TABS.map(t => t.id), 'nastaveni'].includes(id) ? id : 'dnes';
+  const mods = store.getSettings().modules;
+  ui.tab = [...TABS.filter(t => mods[t.id] !== false).map(t => t.id), 'nastaveni'].includes(id) ? id : 'dnes';
   render();
 }
 
@@ -65,8 +66,18 @@ function render() {
   mount(main, current);
   main.scrollTop = keepScroll;
   document.querySelectorAll('.tabbar [data-tab]').forEach(b => b.setAttribute('aria-current', String(b.dataset.tab === ui.tab)));
+  paintTabbar();
   const dev = store.getDevice();
   $('.tabbar .gear').classList.toggle('needs-setup', !(dev.apiUrl && dev.token));
+}
+
+/** Vypnuté moduly (Nastavení → Moduly) zmizí z lišty. */
+function paintTabbar() {
+  const mods = store.getSettings().modules;
+  const bar = $('.tabbar');
+  let n = 0;
+  TABS.forEach(t => { const on = mods[t.id] !== false; bar.querySelector(`[data-tab="${t.id}"]`).hidden = !on; n += on; });
+  bar.style.gridTemplateColumns = `repeat(${n}, 1fr) 56px`;
 }
 
 function tabbar() {
@@ -83,7 +94,7 @@ async function boot() {
   // překreslit při změně dat; nastavení si obsluhuje změny samo
   store.subscribe(() => {
     if (ui.tab !== 'nastaveni') render();
-    else { const dev = store.getDevice(); $('.tabbar .gear').classList.toggle('needs-setup', !(dev.apiUrl && dev.token)); }
+    else { const dev = store.getDevice(); $('.tabbar .gear').classList.toggle('needs-setup', !(dev.apiUrl && dev.token)); paintTabbar(); }
   });
   // o půlnoci / po návratu do appky přepnout „dnes“
   document.addEventListener('visibilitychange', () => {

@@ -406,6 +406,8 @@ h3.sect.pad { margin-top: 22px; }
 .tv em { display: block; font-style: normal; font-size: 11px; color: var(--dim); font-weight: 600; margin-top: 3px; }
 .spark-empty { display: block; }
 .hist { display: grid; }
+button.hist-row { width: 100%; text-align: left; }
+button.hist-row:active { background: #141412; }
 .hist-row { display: grid; grid-template-columns: 96px 1fr 1fr 36px; align-items: center; gap: 8px; min-height: 42px; border-bottom: 1px solid var(--rule); font-size: 15px; }
 .hist-row.head { color: var(--dim); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; min-height: 32px; }
 .hist-row b { font-weight: 800; font-variation-settings: "wdth" 62; font-size: 18px; }

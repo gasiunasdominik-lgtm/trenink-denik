@@ -16,7 +16,7 @@ Core…","zdroj":"Garmin Connect
  *      doplní jen prázdná pole dnešního check-inu (ruční zápis nepřepíše)
  */
 
-const VERSION = 7; // zvyš při změně; appka upozorní, když běží starší nasazení
+const VERSION = 8; // zvyš při změně; appka upozorní, když běží starší nasazení
 
 const SCHEMA = {
   Jednotky:     { key: 'id',         cols: ['id', 'datum', 'poradi', 'typ', 'nazev', 'detail', 'plan_min', 'min', 'rpe', 'srpe', 'poznamka', 'sprint_m', 'skoky', 'hody', 'prekazky', 'reg_min', 'zo', 'zn', 'zav', 'skip', 'smazano', 'ts'] },
@@ -57,8 +57,10 @@ function doGet(e) {
       const now = new Date().toISOString();
       const sheets = {};
       PULL_SHEETS.forEach(name => {
-        const rows = read_(sheet_(ss, name));
-        // Reporty píše Claude ručně a nemusí vyplnit ts – posílají se vždy celé (je jich málo)
+        const sh = sheet_(ss, name);
+        stamp_(sh, name, now); // řádky zapsané ručně / Claudem bez id nebo ts dostanou obojí
+        const rows = read_(sh);
+        // Reporty: posílají se vždy celé (je jich málo a Claude je může přepsat se starým ts)
         sheets[name] = name === 'Reporty' ? rows : rows.filter(r => String(r.ts || '') > since);
       });
       return { now, sheets, version: VERSION };
@@ -348,6 +350,29 @@ function sheet_(ss, name) {
 function headers_(sh) {
   const last = sh.getLastColumn();
   return last ? sh.getRange(1, 1, 1, last).getValues()[0].map(String) : [];
+}
+
+/**
+ * Doplní chybějící klíč a ts u řádků, které nezapsala appka (ruční úprava v Sheetu, Cowork úloha).
+ * Bez ts by je appka při synchronizaci nikdy nestáhla.
+ */
+function stamp_(sh, name, now) {
+  const values = sh.getDataRange().getValues();
+  if (values.length < 2) return;
+  const head = values[0].map(String);
+  const ti = head.indexOf('ts'), key = SCHEMA[name].key, ki = head.indexOf(key);
+  if (ti < 0 || ki < 0) return;
+  const gen = { Zavody: 'z-', Testy: 't-', Jednotky: 'x-' }[name];
+  for (let r = 1; r < values.length; r++) {
+    const row = values[r];
+    if (!row.some(v => v !== '')) continue;
+    if (row[ki] === '') {
+      let k = name === 'Reporty' ? String(row[head.indexOf('tyden')] || '') : gen ? gen + Utilities.getUuid().slice(0, 8) : '';
+      if (name === 'Jednotky' && k) k = String(row[head.indexOf('datum')] || '') + '-' + k;
+      if (k) sh.getRange(r + 1, ki + 1).setValue(k);
+    }
+    if (row[ti] === '') sh.getRange(r + 1, ti + 1).setValue(now);
+  }
 }
 
 function read_(sh) {

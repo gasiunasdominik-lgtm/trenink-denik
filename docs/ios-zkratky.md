@@ -7,7 +7,7 @@ Doplní do dnešního check-inu **spánek**, **čas v posteli** a **klidový tep
 - Spánek spočítá jako sjednocení fází jádro / hluboký / REM / spánek: bez „V posteli“, bez „Vzhůru“ a bez dvojího započtení.
 - Spánek, který změníš ručně v check-inu, import nepřepíše.
 
-Potřebuješ Apps Script **verze 7** (README → Aktualizace skriptu) a z **appky Deník → ozubené kolečko → Google Sheet** opsanou **URL** (končí na `/exec`) a **token**.
+Potřebuješ Apps Script **verze 8** (README → Aktualizace skriptu) a z **appky Deník → ozubené kolečko → Google Sheet** opsanou **URL** (končí na `/exec`) a **token**.
 
 ---
 
@@ -64,6 +64,35 @@ Garmin Connect musí mít noc nahranou do Zdraví. Když oznámení napíše „
 - `spánek: nečitelné datum`: u `zacatek` nebo `konec` není formát data ISO 8601 (český formát skript zvládne taky, ale jiné ne).
 - `žádný spánek od 18:00 včerejška`: Garmin ještě nenahrál noc do Zdraví.
 - `spánek už zapsaný ručně`: spánek jsi zadal v check-inu, import ho nepřepisuje.
-- `Špatný token` / `Neznámá akce`: zkontroluj token / nasaď verzi 7 skriptu.
+- `Špatný token` / `Neznámá akce`: zkontroluj token / nasaď verzi 8 skriptu.
 
 Pokud by to i tak nešlo: spánek zadávej v ranním check-inu. Krokovač je předvyplněný včerejší hodnotou.
+
+---
+
+# Zkratka „Zapiš trénink“ (Siri, diktováním)
+
+Řekneš **„Hej Siri, zapiš trénink“**. Siri se zeptá, co jsi trénoval, kolik minut a jaké RPE, a jednotku zapíše rovnou do Sheetu. V appce se objeví na **DNES** jako jednotka navíc s razítkem. Typ (tyč, výška, rychlost, regenerace…) skript odhadne z toho, co řekneš.
+
+**iPhone → Zkratky → + → název „Zapiš trénink“** (podle názvu ji Siri spouští). Akce:
+
+1. **Zeptat se na vstup:** typ **Text**, výzva `Co jsi trénoval?`
+2. **Nastavit proměnnou:** název `Nazev`, vstup **Zadaný vstup**
+3. **Zeptat se na vstup:** typ **Číslo**, výzva `Kolik minut?`
+4. **Nastavit proměnnou:** `Minuty`
+5. **Zeptat se na vstup:** typ **Číslo**, výzva `RPE od jedné do deseti?`
+6. **Nastavit proměnnou:** `RPE`
+7. **Načíst obsah (Získat obsah URL):** tvoje URL Apps Scriptu, **POST**, **JSON**:
+
+   | Typ | Klíč | Hodnota |
+   |---|---|---|
+   | Text | `token` | tvůj token |
+   | Text | `action` | `log` |
+   | Text | `nazev` | proměnná *Nazev* |
+   | Číslo | `min` | proměnná *Minuty* |
+   | Číslo | `rpe` | proměnná *RPE* |
+
+8. **Získat hodnotu slovníku:** klíč `text` z *Obsah URL*
+9. **Zobrazit výsledek:** *Hodnota slovníku*. Siri řekne třeba „Zapsáno: Tyč technika, 90 min, RPE 7“.
+
+Když jednotka patří k dnešnímu plánu (třeba „Multi-event blok“), zapiš ji raději v appce přes **Hotovo**, ať se odškrtne plánovaná dráha. Siri je na tréninky mimo šablonu.

@@ -133,7 +133,7 @@ function viewResults() {
           h('span.res-v', r.vykon_txt || formatPerf(r.disciplina, r.vykon), r.rucne ? h('small', ' r.') : null,
             r.vitr != null ? h('small', ` ${r.vitr > 0 ? '+' : ''}${fmt(r.vitr, 1)}`) : null),
           h('span.res-p', r.poradi ? `${r.poradi}.` : ''),
-          h('span.res-b', r.body != null ? r.body : ''))));
+          h('span.res-b', r.body ?? points(r.disciplina, r.vykon, { hand: !!r.rucne }) ?? ''))));
     }),
   ];
 }
@@ -175,9 +175,20 @@ function editResult(existing) {
     field('Poznámka', h('input.text-in', { value: r.poznamka || '', on: { input: e => (r.poznamka = e.target.value) } })),
     h('div.sheet-actions',
       h('button.btn-primary', { on: { click: save } }, 'Uložit'),
-      existing ? h('button.btn-ghost', { on: { click: async () => { await store.deleteRow('zavody', r.id); sheet.close(); } } }, 'Smazat') : null),
+      existing ? h('button.btn-ghost', { on: { click: remove } }, 'Smazat') : null),
   ] });
   upd();
+
+  async function remove() {
+    sheet.close();
+    await store.deleteRow('zavody', existing.id);
+    // pokud byl smazaný výsledek zdrojem PB, vrátit PB na nejlepší zbylý výsledek
+    const pbRow = store.row('pb', existing.disciplina);
+    if (pbRow && pbRow.pb === existing.vykon && pbRow.pb_datum === existing.datum) {
+      const next = best(existing.disciplina);
+      await store.saveRow('pb', { ...pbRow, pb: next?.vykon ?? null, pb_datum: next?.datum ?? null });
+    }
+  }
 
   async function save() {
     if (r.vykon == null) { perf.focus(); perf.classList.add('shake'); setTimeout(() => perf.classList.remove('shake'), 400); return; }
@@ -279,19 +290,27 @@ function viewBody() {
       tile('Klidový tep', last('rhr') || rhr, 'rhr', 'bpm', 0)),
     h('div.pad', h('button.btn-primary', { on: { click: () => editBody(rows[0]) } }, '+ Měření')),
     rows.length ? h('div.hist.pad', h('div.hist-row.head', h('span', 'Datum'), h('span', 'kg'), h('span', '% tuku'), h('span', 'tep')),
-      rows.map(r => h('div.hist-row', h('span', dmy(r.datum)), h('b', fmt(r.vaha, 1)), h('span', fmt(r.tuk_pct, 1)), h('span', fmt(r.rhr))))) : null,
+      rows.map(r => h('button.hist-row', { type: 'button', on: { click: () => editBody(r, r) } },
+        h('span', dmy(r.datum)), h('b', fmt(r.vaha, 1)), h('span', fmt(r.tuk_pct, 1)), h('span', fmt(r.rhr))))) : null,
   ];
 }
 
-function editBody(prev) {
-  const r = { datum: today(), vyska: prev?.vyska ?? null };
-  const sheet = openSheet({ title: 'Tělesné míry', full: true, body: [
+/** @param prev poslední měření (předvyplní výšku a nápovědy) · @param existing upravovaný řádek */
+function editBody(prev, existing) {
+  const r = existing ? { ...existing } : { datum: today(), vyska: prev?.vyska ?? null };
+  const sheet = openSheet({ title: existing ? `Míry ${dmy(existing.datum)}` : 'Tělesné míry', full: true, body: [
     field('Datum', h('input.text-in', { type: 'date', value: r.datum, on: { change: e => (r.datum = e.target.value) } })),
-    field('Váha', numField({ decimal: true, unit: 'kg', placeholder: prev?.vaha ?? '', onInput: v => (r.vaha = v) })),
-    field('% tuku', numField({ decimal: true, unit: '%', placeholder: prev?.tuk_pct ?? '', onInput: v => (r.tuk_pct = v) })),
+    field('Váha', numField({ decimal: true, unit: 'kg', value: r.vaha, placeholder: prev?.vaha ?? '', onInput: v => (r.vaha = v) })),
+    field('% tuku', numField({ decimal: true, unit: '%', value: r.tuk_pct, placeholder: prev?.tuk_pct ?? '', onInput: v => (r.tuk_pct = v) })),
     field('Výška', numField({ value: r.vyska, unit: 'cm', onInput: v => (r.vyska = v) })),
-    field('Klidový tep', numField({ unit: 'bpm', placeholder: store.wellness(today())?.rhr ?? '', onInput: v => (r.rhr = v) })),
-    h('div.sheet-actions', h('button.btn-primary', { on: { click: async () => { sheet.close(); await store.saveRow('miry', r); } } }, 'Uložit')),
+    field('Klidový tep', numField({ unit: 'bpm', value: r.rhr, placeholder: store.wellness(today())?.rhr ?? '', onInput: v => (r.rhr = v) })),
+    h('div.sheet-actions',
+      h('button.btn-primary', { on: { click: async () => {
+        sheet.close();
+        if (existing && existing.datum !== r.datum) await store.deleteRow('miry', existing.datum); // datum je klíč
+        await store.saveRow('miry', r);
+      } } }, 'Uložit'),
+      existing ? h('button.btn-ghost', { on: { click: async () => { sheet.close(); await store.deleteRow('miry', existing.datum); } } }, 'Smazat') : null),
   ] });
 }
 

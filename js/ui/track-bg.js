@@ -1,5 +1,5 @@
 // Tartanová pozadí horní části obrazovky DNES. Varianta se volí podle typu dnešního tréninku (plan.bgFor).
-// Souřadnice v boxu 390 × 372. Čísla variant odpovídají design/b1-pozadi.html (1 = ovál, vyřazen).
+// Souřadnice v boxu 390 × 372. Varianta 1 (ovál s tmavým vnitřkem) je vyřazená.
 
 const W = '#f5f2ea', BG = '#0d0d0c';
 const line = (d, w = 2.2, extra = '') => `<path d="${d}" fill="none" stroke="${W}" stroke-width="${w}" ${extra}/>`;

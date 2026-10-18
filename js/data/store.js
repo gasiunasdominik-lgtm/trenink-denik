@@ -38,7 +38,7 @@ export async function init() {
 
 function mergeSettings(s) {
   const d = structuredClone(DEFAULT_SETTINGS);
-  return { ...d, ...s, thresholds: { ...d.thresholds, ...s.thresholds }, checkinFields: { ...d.checkinFields, ...s.checkinFields } };
+  return { ...d, ...s, thresholds: { ...d.thresholds, ...s.thresholds }, checkinFields: { ...d.checkinFields, ...s.checkinFields }, modules: { ...d.modules, ...s.modules } };
 }
 
 // ---------- čtení ----------
@@ -112,7 +112,11 @@ export async function applyRemote(data) {
       return !cur || (r.ts || '') > (cur.ts || '');
     });
     if (!fresh.length) continue;
-    fresh.forEach(r => mem[coll].set(r[key], r));
+    // PB a plány můžou psát appka i Cowork úloha (třeba jen PB z atletika.cz) – slučovat po polích, ne přepsat celý řádek
+    const merge = coll === 'pb'
+      ? r => ({ ...mem.pb.get(r[key]), ...Object.fromEntries(Object.entries(r).filter(([, v]) => v != null && v !== '')) })
+      : r => r;
+    fresh.forEach((r, i) => { fresh[i] = merge(r); mem[coll].set(r[key], fresh[i]); });
     await idb.putMany(coll, fresh);
     changed = true;
   }

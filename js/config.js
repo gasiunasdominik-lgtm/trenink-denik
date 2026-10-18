@@ -65,6 +65,7 @@ export const DEFAULT_SETTINGS = {
   },
   bg: 'auto',         // 'auto' = podle dnešního tréninku, jinak číslo varianty
   customTests: [],    // vlastní testy {id, name, unit, lower, cat: 'vlastni'}
+  modules: { vykon: true, grafy: true }, // záložky, které jde vypnout
   sheetUrl: '',
 };
 

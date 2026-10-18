@@ -13,12 +13,11 @@ index.html, manifest.webmanifest, sw.js   PWA shell (offline cache – při změ
 css/app.css                               celý vzhled („Dráha“)
 js/main.js                                start, záložky
 js/config.js                              typy jednotek, výchozí týdenní šablona, partie, prahy
-js/data/   idb.js · store.js · sync.js    IndexedDB, stav + outbox, sync se Sheetem
-js/calc/   load.js · readiness.js · plan.js   zátěž a OTU, readiness + overreaching, denní plán + výběr pozadí
-js/ui/     dom · inputs · sheet · haptics · track-bg   UI stavebnice, 11 tartanových pozadí
-js/views/  today · checkin · done · week · settings
+js/data/   idb.js · store.js · sync.js · normalize.js   IndexedDB, stav + outbox, sync se Sheetem, sjednocení externích zápisů
+js/calc/   load.js · readiness.js · plan.js · wa.js · perf.js   zátěž a OTU, readiness, plán + pozadí, body WA, PB a testy
+js/ui/     dom · inputs · sheet · haptics · track-bg · chart · celebrate   UI stavebnice, 11 tartanových pozadí, SVG grafy, PB oslava
+js/views/  today · checkin · done · week · performance · charts · settings
 apps-script/Code.gs                       backend nad Sheetem
-design/                                   vizuální návrhy (B1 + varianty pozadí)
 tools/     devserver.py · make_icons.py   lokální server bez cache, generátor ikon
 ```
 
@@ -38,7 +37,7 @@ tools/     devserver.py · make_icons.py   lokální server bez cache, generáto
 
 ### Aktualizace skriptu
 
-Když se `apps-script/Code.gs` změní (aktuálně verze 7):
+Když se `apps-script/Code.gs` změní (aktuálně verze 8):
 
 1. **Google Sheets** (tvoje tabulka v prohlížeči na počítači) → **Rozšíření → Apps Script**.
 2. **Editor Apps Scriptu** → soubor `Kód.gs` → označ všechno (Ctrl+A) → vlož nový obsah `apps-script/Code.gs` z GitHubu → Ctrl+S.
@@ -54,8 +53,8 @@ Když se `apps-script/Code.gs` změní (aktuálně verze 7):
 
 ## Fáze 3: nedělní report a iOS zkratky
 
-- [docs/cowork-nedelni-report.md](docs/cowork-nedelni-report.md): prompt pro naplánovanou úlohu Clauda, která každou neděli zapíše report do listu Reporty (appka ho ukáže v TÝDNU).
-- [docs/ios-zkratky.md](docs/ios-zkratky.md): ranní import spánku a klidového tepu z Apple Health (Garmin → Zdraví). Potřebuje Apps Script verze 7.
+- Nedělní report píše samostatná Cowork úloha do listu **Reporty**; appka ho ukáže v **TÝDNU → Claude · nedělní analýza** (formát: `## nadpis`, `- odrážka`, `**tučně**`).
+- [docs/ios-zkratky.md](docs/ios-zkratky.md): ranní import spánku, času v posteli a klidového tepu z Apple Health (Garmin → Zdraví) a „Hej Siri, zapiš trénink“. Potřebuje Apps Script verze 8.
 
 ## 3. Instalace na iPhone
 
