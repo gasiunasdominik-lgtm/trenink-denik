@@ -52,6 +52,11 @@ Když se `apps-script/Code.gs` změní (fáze 2 = verze 2):
 3. V repozitáři otevři **Settings → Pages → Build and deployment**. Zvol *Source:* **Deploy from a branch**, *Branch:* **main** a **/ (root)**, pak **Save**.
 4. Asi za minutu poběží appka na `https://gasiunasdominik-lgtm.github.io/trenink-denik/`.
 
+## Fáze 3: nedělní report a iOS zkratky
+
+- [docs/cowork-nedelni-report.md](docs/cowork-nedelni-report.md): prompt pro naplánovanou úlohu Clauda, která každou neděli zapíše report do listu Reporty (appka ho ukáže v TÝDNU).
+- [docs/ios-zkratky.md](docs/ios-zkratky.md): „Hej Siri, zapiš trénink“ a ranní import spánku a klidového tepu z Apple Health (Garmin → Zdraví). Potřebuje Apps Script verze 3.
+
 ## 3. Instalace na iPhone
 
 Otevři adresu v **Safari** a dej **Sdílet → Přidat na plochu**. Appka se spustí přes celou obrazovku a funguje offline. Zápisy bez signálu čekají ve frontě a odešlou se, jakmile se telefon připojí (v Nastavení vidíš „ve frontě N“).

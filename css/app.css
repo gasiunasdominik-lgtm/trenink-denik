@@ -283,7 +283,16 @@ textarea.text-in { resize: vertical; line-height: 1.4; }
 .otu .loadbar { padding-left: 0; padding-right: 0; }
 .report-card { border-left: 4px solid var(--tartan); padding: 4px 0 4px 14px; font-size: 15px; line-height: 1.5; -webkit-user-select: text; user-select: text; }
 .report-card small { display: block; color: var(--dim); font-size: 12px; margin-bottom: 6px; }
-.report-card p + p { margin-top: 10px; }
+.report-card p, .report-card ul { margin-top: 8px; }
+.report-card h4 { margin-top: 14px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--tartan-l); }
+.report-card h4:first-of-type { margin-top: 4px; }
+.report-card ul { padding-left: 18px; }
+.report-card li + li { margin-top: 4px; }
+.otu-help { margin-top: 8px; font-size: 13px; }
+.otu-help summary { color: var(--dim); font-size: 12px; padding: 4px 0; cursor: pointer; }
+.otu-help dl { display: grid; grid-template-columns: 48px 1fr; gap: 6px 10px; margin-top: 6px; line-height: 1.35; }
+.otu-help dt { font-weight: 800; color: var(--tartan-l); letter-spacing: .08em; }
+.otu-help dd { color: var(--dim); }
 
 /* ---------- nastavení ---------- */
 .page-head { padding: calc(var(--safe-t) + 18px) 16px 6px; }

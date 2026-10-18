@@ -38,7 +38,8 @@ export function renderSettings() {
     statusEl.textContent = 'Testuji…';
     try {
       const r = await sync.test(url.value.trim(), token.value.trim());
-      statusEl.textContent = `Spojení OK · Sheet: ${r.name}`;
+      const v = r.version || 1;
+      statusEl.textContent = `Spojení OK · Sheet: ${r.name} · skript v${v}${v < 3 ? ' – nasaď novou verzi (README → Aktualizace skriptu)' : ''}`;
       statusEl.dataset.status = 'idle';
     } catch (e) {
       statusEl.textContent = `Nepovedlo se: ${e.message}`;

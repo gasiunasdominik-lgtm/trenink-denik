@@ -47,6 +47,12 @@ export function renderWeek(anchor, { onDay, onShift }) {
       cell('ČZ', fmt(o.cz), 'min'), cell('REG', fmt(o.reg), 'min'), cell('DNY', o.dny), cell('JED', o.jed),
       cell('ZO', o.zo, 'dny'), cell('ZN', o.zn, 'dny'), cell('ZÁV', o.zav, 'starty'),
       cell('sRPE', fmt(o.srpe), 'AU')),
+    h('details.otu-help', h('summary', 'Co znamenají zkratky'),
+      h('dl', [['ČZ', 'celkový čas zatížení – všechny tréninkové jednotky kromě regenerace'],
+        ['REG', 'čas na regeneraci a protahování (mobilita, sauna, masáž + REG min zapsané u jednotek)'],
+        ['DNY', 'dny s tréninkem'], ['JED', 'tréninkové jednotky, dvoufázový den = 2'],
+        ['ZO', 'dny se zdravotním omezením'], ['ZN', 'dny nemoci nebo zranění'], ['ZÁV', 'závodní starty'],
+        ['sRPE', 'minuty × RPE, součet za týden']].map(([k, v]) => [h('dt', k), h('dd', v)]))),
     h('div.loadbar',
       h('span', 'ACWR', h('b', { 'data-zone': acwrZone(load.acwr) }, load.acwr == null ? '–' : fmt(load.acwr, 2))),
       h('span', 'Mono', h('b', load.monotony == null ? '–' : fmt(load.monotony, 1))),
@@ -67,9 +73,31 @@ export function renderWeek(anchor, { onDay, onShift }) {
       h('h3.sect', 'Claude · nedělní analýza'),
       report
         ? h('article.report-card', h('small', [report.datum, report.titulek].filter(Boolean).join(' · ')),
-            String(report.text || '').split(/\n{2,}/).map(p => h('p', p)))
+            reportBody(report.text))
         : h('p.muted', days[6] <= t
-            ?'Report pro tento týden zatím není. Plní ho naplánovaná úloha (fáze 3).'
+            ? 'Report pro tento týden zatím není. Píše ho naplánovaná úloha Clauda v neděli večer.'
             : 'Report přijde v neděli večer.')),
   );
+}
+
+/** Jednoduchý markdown z reportu: ## nadpis, - odrážky, **tučně**. Vkládá se jako text, ne HTML. */
+function reportBody(text) {
+  const inline = line => line.split(/(\*\*[^*]+\*\*)/).map(part =>
+    part.startsWith('**') && part.endsWith('**') ? h('b', part.slice(2, -2)) : part);
+  const out = [];
+  let list = null;
+  String(text || '').split('\n').forEach(raw => {
+    const line = raw.trim();
+    if (/^[-•]\s+/.test(line)) {
+      list ??= h('ul');
+      list.append(h('li', inline(line.replace(/^[-•]\s+/, ''))));
+      return;
+    }
+    if (list) { out.push(list); list = null; }
+    if (!line) return;
+    if (line.startsWith('#')) out.push(h('h4', line.replace(/^#+\s*/, '')));
+    else out.push(h('p', inline(line)));
+  });
+  if (list) out.push(list);
+  return out;
 }
