@@ -3,7 +3,7 @@
 import { h, fmt } from '../ui/dom.js';
 import * as store from '../data/store.js';
 import * as sync from '../data/sync.js';
-import { TYPES, CHECKIN_FIELDS, DEFAULT_TEMPLATE, DEFAULT_DAILY } from '../config.js';
+import { TYPES, TYPE_GROUPS, CHECKIN_FIELDS, DEFAULT_TEMPLATE, DEFAULT_DAILY } from '../config.js';
 import { VARIANT_NAMES } from '../ui/track-bg.js';
 import { tap } from '../ui/haptics.js';
 
@@ -73,8 +73,10 @@ export function renderSettings() {
     const draw = () => {
       box.replaceChildren(h('h4', title),
         ...list.map((u, i) => h('div.tpl-unit',
-          h('select.sel', { on: { change: e => { u.typ = e.target.value; commit(list); } } },
-            Object.entries(TYPES).map(([k, t]) => h('option', { value: k, selected: k === u.typ }, t.label))),
+          h('select.sel', { on: { change: e => { u.typ = e.target.value; delete u.zamereni; commit(list); } } },
+            TYPES[u.typ]?.legacy ? h('option', { value: u.typ, selected: true }, `${TYPES[u.typ].label} (starý typ)`) : null,
+            TYPE_GROUPS.map(([g, title]) => h('optgroup', { label: title },
+              Object.entries(TYPES).filter(([, t]) => t.group === g).map(([k, t]) => h('option', { value: k, selected: k === u.typ }, t.label))))),
           h('input.text-in', { value: u.nazev, placeholder: 'název', on: { change: e => { u.nazev = e.target.value; commit(list); } } }),
           h('input.text-in', { value: u.detail || '', placeholder: 'detail', on: { change: e => { u.detail = e.target.value; commit(list); } } }),
           h('label.tpl-min', h('input.text-in', { value: u.min, inputmode: 'numeric', on: { change: e => { u.min = Number(e.target.value) || 0; commit(list); } } }), 'min'),

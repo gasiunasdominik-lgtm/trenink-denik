@@ -10,6 +10,7 @@ import { TYPES } from '../config.js';
 import { today, dm, dowShort } from '../lib/dates.js';
 import { campOn } from '../calc/camps.js';
 import { DAY_PARTS } from '../calc/plan.js';
+import { typePicker, focusOf, focusLabel } from '../ui/typepicker.js';
 
 const VOLUME = [
   ['sprint_m', 'Sprint', 'm'],
@@ -44,7 +45,9 @@ export function openDone(row, datum, onSaved = () => {}) {
     id: row?.id ?? `${datum}-x${Date.now().toString(36)}`,
     datum,
     poradi: row?.poradi ?? 100,
-    typ: row?.typ ?? 'sila',
+    typ: row?.typ ?? '',
+    zamereni: row?.zamereni ?? '',
+    discipliny: row?.discipliny ?? '',
     nazev: row?.nazev ?? '',
     detail: row?.detail ?? '',
     plan_min: row?.plan?.min ?? null,
@@ -56,7 +59,7 @@ export function openDone(row, datum, onSaved = () => {}) {
     // nová jednotka: na soustředění typ podle poslední jednotky soustředění, část dne podle hodiny
     if (camp) {
       const lastCamp = store.units().filter(x => x.soustredeni === camp.camp.nazev && x.min > 0).sort((a, b) => b.id.localeCompare(a.id))[0];
-      if (lastCamp) u.typ = lastCamp.typ;
+      if (lastCamp) Object.assign(u, { typ: lastCamp.typ, zamereni: lastCamp.zamereni || '', discipliny: lastCamp.discipliny || '' });
     }
     if (datum === today()) { const hr = new Date().getHours(); u.faze_dne = hr < 9 ? 'rano' : hr < 12 ? 'dopoledne' : hr < 18 ? 'odpoledne' : 'vecer'; }
   }
@@ -99,17 +102,17 @@ export function openDone(row, datum, onSaved = () => {}) {
   refreshSuggestions();
 
   const body = [];
+  const picker = typePicker(u, store.units().filter(x => x.id !== u.id), () => { refreshSuggestions(); if (focusSum) focusSum.textContent = focusLabel(u) || 'nevybráno'; });
+  let focusSum = null;
   if (extra) {
     const names = uniq(store.units().sort((a, b) => b.datum.localeCompare(a.datum)).map(x => x.nazev)).slice(0, 40);
-    const typSel = h('select.sel', { on: { change: e => { u.typ = e.target.value; refreshSuggestions(); } } },
-      Object.entries(TYPES).map(([k, t]) => h('option', { value: k, selected: k === u.typ }, t.label)));
     const nameIn = h('input.text-in', { value: u.nazev, list: 'unit-names', placeholder: 'např. Výška technika', on: {
       input: e => { u.nazev = e.target.value; },
       change: () => {
         // známý název → převzít typ a hodnoty z posledního zápisu
         const l = hist()[0];
         if (l && norm(l.nazev) === norm(u.nazev)) {
-          u.typ = l.typ; typSel.value = l.typ;
+          Object.assign(u, { typ: l.typ, zamereni: l.zamereni || '', discipliny: l.discipliny || '' }); picker.refresh();
           if (!wasDone) { minStep.setValue(l.min); if (l.rpe) { u.rpe = l.rpe; rpeBox.replaceWith(rpeBox = rpeScale()); rpeHint.textContent = `předvyplněno jako ${dm(l.datum)}`; } }
         }
         refreshSuggestions();
@@ -118,9 +121,13 @@ export function openDone(row, datum, onSaved = () => {}) {
     body.push(
       field('Název', h('div', nameIn, h('datalist#unit-names', names.map(n => h('option', { value: n }))))),
       field('Část dne', chips(DAY_PARTS.map(([value, label]) => ({ label, value })), v => (u.faze_dne = v), { active: u.faze_dne })),
-      h('div.two', field('Typ', typSel),
-        field('Datum', h('input.text-in', { type: 'date', value: u.datum, max: today(), on: { change: e => (u.datum = e.target.value || u.datum) } }))),
+      field('Zaměření', picker.el),
+      field('Datum', h('input.text-in', { type: 'date', value: u.datum, max: today(), on: { change: e => (u.datum = e.target.value || u.datum) } })),
     );
+  } else {
+    // plánovaná jednotka: zaměření je ze šablony, změnit jde ťuknutím
+    focusSum = h('span.tp-sum', focusLabel(u) || 'nevybráno');
+    body.push(h('details.tp-fold', h('summary', h('span.field-l', 'Zaměření'), focusSum, h('span.tp-edit', 'změnit')), picker.el));
   }
 
   const rpeScale = () => scale({ from: 1, to: 10, value: u.rpe, labels: { 1: 'lehké', 10: 'max' }, onPick: v => { u.rpe = v; rpeHint.textContent = 'jak těžké to celé bylo'; } });
@@ -164,7 +171,19 @@ export function openDone(row, datum, onSaved = () => {}) {
       setTimeout(() => sc.classList.remove('shake'), 400);
       return;
     }
-    if (!u.nazev.trim()) u.nazev = TYPES[u.typ]?.label || 'Trénink';
+    if (!u.typ) {
+      const tp = sheet.panel.querySelector('.tpick');
+      tp.closest('details')?.setAttribute('open', '');
+      tp.classList.add('shake');
+      tp.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      setTimeout(() => tp.classList.remove('shake'), 400);
+      toast('Vyber, co jsi trénoval');
+      return;
+    }
+    // ukládá se v novém tvaru: hlavní zaměření v typ, všechna v zamereni, disciplíny v discipliny
+    const f = focusOf(u);
+    u.typ = f.foci[0]; u.zamereni = f.foci.length > 1 ? f.foci.join(',') : ''; u.discipliny = f.disc.join(',');
+    if (!u.nazev.trim()) u.nazev = focusLabel(u).slice(0, 60) || 'Trénink';
     // jednotky ze soustředění nesou jeho název (pro report a porovnání zátěže)
     const c = campOn(u.datum);
     if (c) u.soustredeni = c.camp.nazev; else delete u.soustredeni;

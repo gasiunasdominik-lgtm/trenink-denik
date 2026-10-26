@@ -507,3 +507,17 @@ button.hist-row:active { background: #141412; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* výběr zaměření a disciplín (ui/typepicker.js) */
+.tpick { display: grid; gap: 12px; }
+.tp-sec { display: grid; gap: 6px; }
+.tp-h { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.tp-h small { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.tp-hint { font-size: 13px; color: var(--dim); min-height: 1.4em; }
+.tp-main { margin-left: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; opacity: .85; }
+.tp-fold > summary { display: flex; align-items: baseline; gap: 10px; cursor: pointer; list-style: none; padding: 4px 0; }
+.tp-fold > summary::-webkit-details-marker { display: none; }
+.tp-sum { flex: 1; min-width: 0; font-weight: 600; }
+.tp-edit { font-size: 13px; color: var(--tartan-l); }
+.tp-fold[open] .tp-edit { visibility: hidden; }
+.tp-fold[open] > .tpick { margin-top: 10px; }

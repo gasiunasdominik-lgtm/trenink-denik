@@ -1,24 +1,45 @@
 // Výchozí nastavení a číselníky. Uživatelské změny se ukládají přes store (settings).
 
-/** Typy jednotek: popisek, motiv pozadí (varianta tartanu) a zda jde o regeneraci (počítá se do REG, ne do ČZ/JED). */
+/**
+ * Zaměření jednotky (co se rozvíjelo). group = skupina ve výběru, bg = motiv tartanu, reg = regenerace (počítá se do REG, ne do ČZ/JED),
+ * hint = nápověda pod čipem. Jednotka má hlavní zaměření v `typ`, všechna vybraná v `zamereni` a disciplíny v `discipliny` (čárkami).
+ */
 export const TYPES = {
-  rychlost:   { label: 'Rychlost',          bg: 4,  reg: false },
-  start:      { label: 'Starty',            bg: 2,  reg: false },
-  multi:      { label: 'Multi-event',       bg: 8,  reg: false },
-  tempo:      { label: 'Tempo / RV',        bg: 3,  reg: false },
-  prekazky:   { label: 'Překážky',          bg: 5,  reg: false },
-  dalka:      { label: 'Dálka',             bg: 7,  reg: false },
-  vyska:      { label: 'Výška',             bg: 9,  reg: false },
-  tyc:        { label: 'Tyč',               bg: 7,  reg: false },
-  vrhy:       { label: 'Koule / disk',      bg: 6,  reg: false },
-  ostep:      { label: 'Oštěp',             bg: 12, reg: false },
-  stafeta:    { label: 'Štafeta',           bg: 11, reg: false },
-  sila:       { label: 'Síla / gym',        bg: 10, reg: false },
-  slabiny:    { label: 'Slabiny',           bg: 10, reg: false },
-  zavod:      { label: 'Závod',             bg: 2,  reg: false },
-  mobilita:   { label: 'Mobilita / rehab',  bg: 10, reg: true },
-  regenerace: { label: 'Regenerace',        bg: 10, reg: true },
+  starty:     { label: 'Starty / akcelerace',     group: 'rychlost',   bg: 2,  hint: 'do 30–40 m · bloky, polovysoký start' },
+  rychlost:   { label: 'Max. rychlost',           group: 'rychlost',   bg: 4,  hint: 'letmé úseky 20–60 m · plná pauza' },
+  rv:         { label: 'Rychlostní vytrvalost',   group: 'rychlost',   bg: 3,  hint: '80–150 m téměř naplno · dlouhá pauza' },
+  sv:         { label: 'Sprinterská vytrvalost',  group: 'rychlost',   bg: 3,  hint: '150–400 m · laktát · 400 m' },
+  aerobni:    { label: 'Aerobní základ',          group: 'vytrvalost', bg: 3,  hint: 'klus, fartlek, kolo, plavání · dá se mluvit' },
+  tempo:      { label: 'Tempo (extenzivní)',      group: 'vytrvalost', bg: 3,  hint: '100–300 m na 60–75 % · krátké pauzy' },
+  vytrvalost: { label: 'Speciální vytrvalost',    group: 'vytrvalost', bg: 3,  hint: '1500 m: úseky 300–1000 m · ANP, VO₂max' },
+  technika:   { label: 'Technika disciplín',      group: 'technika',   bg: 7,  hint: 'vyber disciplíny níž' },
+  multi:      { label: 'Multi-event blok',        group: 'technika',   bg: 8,  hint: 'víc disciplín za sebou' },
+  zavod:      { label: 'Závod / test',            group: 'technika',   bg: 2 },
+  sila:       { label: 'Síla / posilovna',        group: 'sila',       bg: 10, hint: 'činky · max a submax' },
+  vybusnost:  { label: 'Výbušnost / plyometrie',  group: 'sila',       bg: 10, hint: 'odrazy, skoky, medicinbal' },
+  kruhovy:    { label: 'Kruhový / silová vytrv.', group: 'sila',       bg: 10 },
+  gymnastika: { label: 'Gymnastika',              group: 'sila',       bg: 9 },
+  slabiny:    { label: 'Slabiny / prevence',      group: 'sila',       bg: 10, hint: 'kotník, jednonožní, stabilita' },
+  mobilita:   { label: 'Mobilita / rehab',        group: 'regen',      bg: 10, reg: true },
+  regenerace: { label: 'Regenerace',              group: 'regen',      bg: 10, reg: true, hint: 'sauna, masáž, válec, protažení' },
+  jine:       { label: 'Jiné / hry',              group: 'regen',      bg: 10, hint: 'fotbal, lyže, cokoli dalšího' },
+  // dřívější typy – staré zápisy a šablony je dál nesou, ve výběru nejsou (legacy = nový typ, disc = disciplíny)
+  start:      { label: 'Starty',        bg: 2,  legacy: 'starty' },
+  prekazky:   { label: 'Překážky',      bg: 5,  legacy: 'technika', disc: ['110pr'] },
+  dalka:      { label: 'Dálka',         bg: 7,  legacy: 'technika', disc: ['dalka'] },
+  vyska:      { label: 'Výška',         bg: 9,  legacy: 'technika', disc: ['vyska'] },
+  tyc:        { label: 'Tyč',           bg: 7,  legacy: 'technika', disc: ['tyc'] },
+  vrhy:       { label: 'Koule / disk',  bg: 6,  legacy: 'technika', disc: ['koule', 'disk'] },
+  ostep:      { label: 'Oštěp',         bg: 12, legacy: 'technika', disc: ['ostep'] },
+  stafeta:    { label: 'Štafeta',       bg: 11, legacy: 'technika', disc: ['stafeta'] },
 };
+
+/** Skupiny zaměření ve výběru (pořadí = pořadí na obrazovce). */
+export const TYPE_GROUPS = [['rychlost', 'Rychlost'], ['vytrvalost', 'Vytrvalost'], ['technika', 'Technika a závody'], ['sila', 'Síla'], ['regen', 'Regenerace a ostatní']];
+
+/** Disciplíny, které jde k jednotce přiřadit (víc najednou). id = id z DISCIPLINES, štafeta navíc. */
+export const UNIT_DISC = [['100', '100 m'], ['dalka', 'Dálka'], ['koule', 'Koule'], ['vyska', 'Výška'], ['400', '400 m'], ['110pr', 'Překážky'],
+  ['disk', 'Disk'], ['tyc', 'Tyč'], ['ostep', 'Oštěp'], ['1500', '1500 m'], ['stafeta', 'Štafeta']];
 
 const u = (typ, nazev, detail, min) => ({ typ, nazev, detail, min });
 
@@ -28,8 +49,8 @@ export const DEFAULT_TEMPLATE = {
   2: [u('multi', 'Multi-event blok', 'technika + síla', 120)],
   3: [u('slabiny', 'Slabiny bez trenéra', 'jednonožní reaktivita L · kotník · bez náčiní', 60),
       u('regenerace', 'Regenerace', 'protažení · válec', 30)],
-  4: [u('tyc', 'Tyč + gymnastika', 'rychlost · horní tělo', 120)],
-  5: [u('tempo', 'Rychlostní vytrvalost', 'tempo', 90)],
+  4: [{ ...u('technika', 'Tyč + gymnastika', 'rychlost · horní tělo', 120), zamereni: 'technika,gymnastika', discipliny: 'tyc' }],
+  5: [u('rv', 'Rychlostní vytrvalost', 'tempo', 90)],
   6: [u('multi', 'Multi-event blok', 'technika + síla', 120),
       u('regenerace', 'Sauna + masáž', 'regenerace', 45)],
   7: [],
