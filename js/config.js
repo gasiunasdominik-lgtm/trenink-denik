@@ -120,7 +120,7 @@ export const DISCIPLINES = [
   { id: '200',    label: '200 m',        kind: 'time' },
 ];
 
-export const TEST_CATEGORIES = { obecne: 'Obecné', specialni: 'Speciální', vlastni: 'Vlastní' };
+export const TEST_CATEGORIES = { obecne: 'Obecné', specialni: 'Speciální', vald: 'VALD / ForceDecks', vlastni: 'Vlastní' };
 
 /** Testy. lower = nižší hodnota je lepší. */
 export const DEFAULT_TESTS = [
@@ -138,6 +138,22 @@ export const DEFAULT_TESTS = [
   { id: 'rsi_l',      name: 'RSI jednonož L',           unit: '',      lower: false, cat: 'specialni' },
   { id: 'rsi_p',      name: 'RSI jednonož P',           unit: '',      lower: false, cat: 'specialni' },
   { id: 'forcedecks', name: 'ForceDecks',               unit: '',      lower: false, cat: 'specialni' },
+  // VALD (ForceDecks, DynaMo) – metriky z reportů Body Solution Clinic; L/P = levá/pravá DK
+  ...[['ham_iso', 'Hamstring 30/30 izometrie – peak', 'N'], ['ham_f200', 'Hamstring 30/30 – síla za 200 ms', 'N'], ['ham_rfd', 'Hamstring 30/30 – RFD 150 ms', 'N/s'],
+    ['slcmj_rsi', 'SL CMJ rebound – RSI', 'm/s'], ['slcmj_imp', 'SL CMJ rebound – konc. impulz / BM', 'N s/kg'], ['sl_land', 'SL CMJ rebound – dopadová síla', 'N'],
+    ['sldj_h', 'SL drop jump – výška', 'cm'], ['sldj_ci', 'SL drop jump – konc. impulz', 'N s'], ['sldj_ei', 'SL drop jump – exc. impulz', 'N s'],
+    ['hipflex_rfd', 'Flexe kyčle vsedě – RFD', 'N/s'], ['kneeflex_rfd', 'Flexe kolene vsedě – RFD', 'N/s']]
+    .flatMap(([id, name, unit]) => [['_l', ' L'], ['_p', ' P']].map(([s, l]) => ({ id: id + s, name: name + l, unit, lower: id === 'sl_land', cat: 'vald' }))),
+  { id: 'dj_h',       name: 'Drop jump – výška',               unit: 'cm',   lower: false, cat: 'vald' },
+  { id: 'dj_ci',      name: 'Drop jump – konc. impulz',        unit: 'N s',  lower: false, cat: 'vald' },
+  { id: 'dj_land',    name: 'Drop jump – dopadová síla',       unit: 'N',    lower: true,  cat: 'vald' },
+  { id: 'sj_h',       name: 'Squat jump – výška',              unit: 'cm',   lower: false, cat: 'vald' },
+  { id: 'sj_pp',      name: 'Squat jump – peak power / BM',    unit: 'W/kg', lower: false, cat: 'vald' },
+  { id: 'sj_ci',      name: 'Squat jump – konc. impulz',       unit: 'N s',  lower: false, cat: 'vald' },
+  { id: 'sj_rfd',     name: 'Squat jump – konc. RFD',          unit: 'N/s',  lower: false, cat: 'vald' },
+  { id: 'cmj_pp',     name: 'CMJ – peak power / BM',           unit: 'W/kg', lower: false, cat: 'vald' },
+  { id: 'cmj_ci',     name: 'CMJ – konc. impulz',              unit: 'N s',  lower: false, cat: 'vald' },
+  { id: 'cmj_ebrfd',  name: 'CMJ – exc. brzdné RFD',           unit: 'N/s',  lower: false, cat: 'vald' },
 ];
 
 /** Sezóna (tréninkový rok) začíná 1. října. */

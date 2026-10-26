@@ -236,7 +236,7 @@ function editResult(existing) {
 function viewTests() {
   const tests = allTests();
   const cats = Object.keys(TEST_CATEGORIES).filter(c => tests.some(t => t.cat === c));
-  const asym = [['CMJ', 'cmj_l', 'cmj_p'], ['RSI', 'rsi_l', 'rsi_p']]
+  const asym = [['CMJ', 'cmj_l', 'cmj_p'], ['RSI', 'rsi_l', 'rsi_p'], ['Hamstring', 'ham_iso_l', 'ham_iso_p'], ['SL drop jump', 'sldj_h_l', 'sldj_h_p'], ['Flexe kyčle', 'hipflex_rfd_l', 'hipflex_rfd_p']]
     .map(([l, a, b]) => [l, asymmetry(a, b)]).filter(([, v]) => v != null);
 
   return [
