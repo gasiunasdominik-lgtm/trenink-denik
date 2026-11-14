@@ -51,6 +51,7 @@ export function openDone(row, datum, onSaved = () => {}) {
     nazev: row?.nazev ?? '',
     detail: row?.detail ?? '',
     plan_min: row?.plan?.min ?? null,
+    obsah: row?.plan?.obsah ?? '', // předepsaný obsah ze šablony; uložený zápis má vždy přednost
     ...(row?.unit || {}),
   };
   const prev = row?.unit ? { ...row.unit } : null;

@@ -25,7 +25,10 @@ export function dayRows(datum) {
     const u = logged.find(x => x.id === id);
     return { id, plan: p, unit: u, ...p, ...(u || {}), done: !!u && u.min > 0, skipped: !!u?.skip, poradi: i };
   });
-  logged.filter(u => !u.id.includes('-p'))
+  // zápisy, které nejsou navázané na žádný řádek dnešní šablony (navíc, nebo ze staré šablony), se ukážou vždy
+  const used = new Set(rows.map(r => r.id));
+  // (vynechané nebo smazané řádky staré šablony se už neukazují)
+  logged.filter(u => !used.has(u.id) && !(u.id.includes('-p') && !(u.min > 0)))
     .sort((a, b) => partOrder(a) - partOrder(b) || a.id.localeCompare(b.id))
     .forEach((u, j) => rows.push({ id: u.id, plan: null, unit: u, ...u, done: u.min > 0, poradi: 100 + j }));
   return rows;

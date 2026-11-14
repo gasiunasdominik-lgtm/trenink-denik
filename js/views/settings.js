@@ -79,6 +79,7 @@ export function renderSettings() {
               Object.entries(TYPES).filter(([, t]) => t.group === g).map(([k, t]) => h('option', { value: k, selected: k === u.typ }, t.label))))),
           h('input.text-in', { value: u.nazev, placeholder: 'název', on: { change: e => { u.nazev = e.target.value; commit(list); } } }),
           h('input.text-in', { value: u.detail || '', placeholder: 'detail', on: { change: e => { u.detail = e.target.value; commit(list); } } }),
+          h('textarea.text-in.tpl-obsah', { rows: 3, placeholder: 'předepsaný obsah (předvyplní se do zápisu)', on: { change: e => { u.obsah = e.target.value; commit(list); } } }, u.obsah || ''),
           h('label.tpl-min', h('input.text-in', { value: u.min, inputmode: 'numeric', on: { change: e => { u.min = Number(e.target.value) || 0; commit(list); } } }), 'min'),
           h('button.btn-x', { 'aria-label': 'Odebrat', on: { click: () => { list.splice(i, 1); commit(list); draw(); } } }, '×'),
         )),

@@ -1,6 +1,6 @@
 // Stav appky: data v paměti, trvale v IndexedDB, změny se řadí do outboxu pro sync se Sheetem.
 import * as idb from './idb.js';
-import { DEFAULT_SETTINGS, DEFAULT_DEVICE, TEMPLATE_VERSION } from '../config.js';
+import { DEFAULT_SETTINGS, DEFAULT_DEVICE, TEMPLATE_VERSION, DAILY_V2 } from '../config.js';
 import { nowIso } from '../lib/dates.js';
 
 /** Kolekce ↔ list v Google Sheetu. */
@@ -38,8 +38,12 @@ export async function init() {
 
 function mergeSettings(s) {
   const d = structuredClone(DEFAULT_SETTINGS);
-  // nová výchozí šablona (nový tréninkový plán) přepíše starou uloženou jen jednou
-  if ((s.templateVersion || 1) < TEMPLATE_VERSION) s = { ...s, template: d.template, daily: d.daily, templateVersion: TEMPLATE_VERSION };
+  // nová výchozí šablona (nový tréninkový plán) nahradí uloženou jen jednou; denní jednotku a vše ostatní nechá,
+  // jen tu, kterou omylem přepsala verze 2, vrátí na původní
+  if ((s.templateVersion || 1) < TEMPLATE_VERSION) {
+    const dailyV2 = JSON.stringify(s.daily) === JSON.stringify(DAILY_V2);
+    s = { ...s, template: d.template, templateVersion: TEMPLATE_VERSION, ...(dailyV2 ? { daily: d.daily } : {}) };
+  }
   return { ...d, ...s, thresholds: { ...d.thresholds, ...s.thresholds }, checkinFields: { ...d.checkinFields, ...s.checkinFields }, modules: { ...d.modules, ...s.modules } };
 }
 
