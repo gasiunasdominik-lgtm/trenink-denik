@@ -125,7 +125,12 @@ export function openDone(row, datum, onSaved = () => {}) {
       field('Datum', h('input.text-in', { type: 'date', value: u.datum, max: today(), on: { change: e => (u.datum = e.target.value || u.datum) } })),
     );
   } else {
-    // plánovaná jednotka: zaměření je ze šablony, změnit jde ťuknutím
+    // plánovaná jednotka: název i zaměření jsou ze šablony, oboje jde pro tento zápis změnit
+    const nameIn = h('input.text-in', { value: u.nazev, placeholder: 'název tréninku', on: {
+      input: e => { u.nazev = e.target.value; },
+      change: () => refreshSuggestions(),
+    } });
+    body.push(field('Název', nameIn));
     focusSum = h('span.tp-sum', focusLabel(u) || 'nevybráno');
     body.push(h('details.tp-fold', h('summary', h('span.field-l', 'Zaměření'), focusSum, h('span.tp-edit', 'změnit')), picker.el));
   }
@@ -161,7 +166,8 @@ export function openDone(row, datum, onSaved = () => {}) {
     secondary.length ? h('div.row.split', secondary) : null);
 
   const title = [u.nazev || (camp ? 'Jednotka · soustředění' : 'Jednotka navíc'), datum !== today() ? dm(datum) : null].filter(Boolean).join(' · ');
-  const sheet = openSheet({ title, body: [...body, actions], full: true });
+  const pristine = JSON.stringify(u);
+  const sheet = openSheet({ title, body: [...body, actions], full: true, guard: () => JSON.stringify(u) !== pristine });
 
   async function save() {
     if (!u.rpe) {

@@ -22,6 +22,8 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; background: var(--bg); color: var(--ink); }
+/* žádné přiblížení dvojitým ťuknutím (pinch zůstává) */
+* { touch-action: manipulation; } /* i uvnitř scrollovacích kontejnerů; konkrétní pravidla (sheet-head, grafy) mají přednost */
 body {
   font-family: "Archivo", system-ui, sans-serif;
   font-variation-settings: "wdth" 88;
