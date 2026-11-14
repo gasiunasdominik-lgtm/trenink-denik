@@ -43,20 +43,33 @@ export const UNIT_DISC = [['100', '100 m'], ['dalka', 'Dálka'], ['koule', 'Koul
 
 const u = (typ, nazev, detail, min) => ({ typ, nazev, detail, min });
 
-/** Týdenní šablona: klíč = den v týdnu (1 = pondělí … 7 = neděle). */
+/**
+ * Týdenní šablona: klíč = den v týdnu (1 = pondělí … 7 = neděle).
+ * Plán vícebojaře od 11/2026: Po + Út těžké, St lehká, Čt technický, Pá těžký, So střední, Ne volno.
+ */
 export const DEFAULT_TEMPLATE = {
-  1: [u('rychlost', 'Rychlost se sprintery', 'max rychlost · letmé úseky', 90)],
-  2: [u('multi', 'Multi-event blok', 'technika + síla', 120)],
-  3: [u('slabiny', 'Slabiny bez trenéra', 'jednonožní reaktivita L · kotník · bez náčiní', 60),
-      u('regenerace', 'Regenerace', 'protažení · válec', 30)],
-  4: [{ ...u('technika', 'Tyč + gymnastika', 'rychlost · horní tělo', 120), zamereni: 'technika,gymnastika', discipliny: 'tyc' }],
-  5: [u('rv', 'Rychlostní vytrvalost', 'tempo', 90)],
-  6: [u('multi', 'Multi-event blok', 'technika + síla', 120),
-      u('regenerace', 'Sauna + masáž', 'regenerace', 45)],
+  1: [u('rychlost', 'Rychlost se sprintery', 'max rychlost · se skupinou · na konci nic navíc', 90)],
+  2: [{ ...u('technika', 'Výška', 'rozcvička + prevence · max. 10–12 skoků', 50), discipliny: 'vyska' },
+      u('vybusnost', 'Výskoky', 'SL RDL + flexe kyčle KB 12,5 kg 2×6/n · pogo s gumou 2–3×15 · RFE split jump 4×3/n · SL CMJ 3×3/n · pauza 2–3 min', 25),
+      u('tempo', 'Extenzivní tempo', '5–6× 200 m na 70–75 % · klus/chůze mezi úseky', 22),
+      u('sila', 'Bulharský dřep', 'týdny 1–2: 4×6, pak 5×6 · 10+10 kg · RPE 75–85 % · 3 s dolů, výbušně nahoru · pauza 2–3 min', 23)],
+  3: [u('aerobni', 'Rozběhání + ABC', 'regenerační tempo · odrazy jen symbolicky (skipy)', 30),
+      u('mobilita', 'Fyzio', 'powerball 3×30 s · KB rotace 3×8/str · mostík 1 noha 3×30 s · zápěstí + pronace 3×12 (izotonicky až po izometrii) · dead bug 2×8 · Pallof 2×8', 30)],
+  4: [{ ...u('technika', 'Tyč + vrh', 'se skupinou · ztuhlé nohy → kratší rozběh (4–6 kroků)', 90), discipliny: 'tyc,koule' },
+      u('sila', 'Horní polovina těla', '2–3 cviky × 3 série, převaha tahů · přítahy, shyby, landmine press, medicinbal · bez těžkého benche', 20)],
+  5: [{ ...u('rv', 'Rychlostní vytrvalost / 1500', 'se skupinou · nebo příprava na 1500/1000 m', 75), zamereni: 'rv,vytrvalost', discipliny: '1500' },
+      u('slabiny', 'Reverse nordic + core', 'reverse nordic 1×6 (od 3. týdne 2×6) · core 3×8–10', 10)],
+  6: [{ ...u('technika', 'Překážky technicky', 'rozcvička + kotník · zkrácené rozestupy · 3–4 × 3–5 př. · ≤85 % · pauza 3–4 min', 45), discipliny: '110pr' },
+      { ...u('technika', 'Vrhy podle fáze lokte', '10–25 hodů · jen když čtvrtek prošel pravidlem bolesti (≤3/10, ráno zpět)', 25), discipliny: 'koule' },
+      u('aerobni', 'Volitelný klus + strečink', 'klus 20–30 min, RPE ≤4 · vynech při nízkém HRV nebo ztuhlém hamstringu', 20),
+      u('regenerace', 'Sauna / masáž', 'regenerace', 45)],
   7: [],
 };
 
-export const DEFAULT_DAILY = [u('mobilita', 'Mobilita / rehab', 'kotník L · loket P', 30)];
+/** Verze výchozí šablony. Při zvýšení se uložená šablona jednou přepíše novou výchozí (viz store.mergeSettings). */
+export const TEMPLATE_VERSION = 2;
+
+export const DEFAULT_DAILY = [u('mobilita', 'Mobilita / rehab', 'izometrie lokte 4–5× 30–45 s · kotník L · hamstringy', 15)];
 
 export const DEFAULT_BODY_PARTS = ['P hamstring', 'L flexor kyčle', 'L kotník', 'P rameno', 'P loket'];
 
@@ -73,6 +86,7 @@ export const CHECKIN_FIELDS = {
 
 export const DEFAULT_SETTINGS = {
   template: DEFAULT_TEMPLATE,
+  templateVersion: TEMPLATE_VERSION,
   daily: DEFAULT_DAILY,
   bodyParts: DEFAULT_BODY_PARTS,
   checkinFields: Object.fromEntries(Object.keys(CHECKIN_FIELDS).map(k => [k, true])),
