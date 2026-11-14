@@ -35,6 +35,20 @@ export function openSheet({ title, body, full = false, guard = null }) {
     el.addEventListener('touchcancel', onEnd);
   }
 
+  // scroll uvnitř panelu se nesmí přelít na stránku pod ním (iOS řetězí scroll na konci obsahu)
+  const sbody = panel.querySelector('.sheet-body');
+  let ty = 0, tx = 0;
+  panel.addEventListener('touchstart', e => { ty = e.touches[0].clientY; tx = e.touches[0].clientX; }, { passive: true });
+  panel.addEventListener('touchmove', e => {
+    const dy = e.touches[0].clientY - ty, dx = e.touches[0].clientX - tx;
+    if (Math.abs(dx) > Math.abs(dy)) return;                        // vodorovně (čipy, posuvníky) nechat být
+    if (!sbody.contains(e.target)) { e.preventDefault(); return; }  // úchyt/hlavička: táhne se panel, ne stránka
+    const atTop = sbody.scrollTop <= 0;
+    const atBottom = sbody.scrollTop + sbody.clientHeight >= sbody.scrollHeight - 1;
+    if ((dy > 0 && atTop) || (dy < 0 && atBottom)) e.preventDefault();
+  }, { passive: false });
+  scrim.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
   const onKey = e => e.key === 'Escape' && dismiss();
   document.addEventListener('keydown', onKey);
 
